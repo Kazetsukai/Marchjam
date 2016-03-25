@@ -6,6 +6,8 @@ public class Vehicle : MonoBehaviour
     [Header("Movement")]
     [SerializeField] float DriveForce = 100f;
     [SerializeField] float MaxSteeringAngle = 35f;
+    [SerializeField] AnimationCurve SpeedVsDownforce;
+    [SerializeField] bool UseDownforce = true;
 
     [Header("Wheels")]
     [SerializeField] VehicleWheel Wheel_FR;
@@ -32,11 +34,19 @@ public class Vehicle : MonoBehaviour
 
         //Rotate wheels
         Wheel_FR.transform.localEulerAngles = new Vector3(Wheel_FR.transform.localEulerAngles.x, steering * MaxSteeringAngle, Wheel_FR.transform.localEulerAngles.z);
-        Wheel_FL.transform.localEulerAngles = new Vector3(Wheel_FL.transform.localEulerAngles.x, steering * MaxSteeringAngle, Wheel_FL.transform.localEulerAngles.z);     
+        Wheel_FL.transform.localEulerAngles = new Vector3(Wheel_FL.transform.localEulerAngles.x, steering * MaxSteeringAngle, Wheel_FL.transform.localEulerAngles.z);
+
+        //Apply downforce
+        if (UseDownforce)
+        {
+            rb.AddForce(0, -SpeedVsDownforce.Evaluate(rb.velocity.magnitude), 0);
+        }
     }
-    
+
     void Update ()
     {
-	
+      
+
+
 	}
 }
