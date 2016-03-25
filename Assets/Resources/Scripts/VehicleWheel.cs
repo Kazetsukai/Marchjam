@@ -8,9 +8,9 @@ public class VehicleWheel : MonoBehaviour
     [SerializeField] float GroundedThreshold = 0.1f;
     public bool Grounded = false;
     [SerializeField] bool DebugRay = false;
-
-    [SerializeField] float FrictionLateral = 0.8f;              // Max value = 1f;
+    
     [SerializeField] float FrictionLateral_Drift = 0.1f;
+    [SerializeField] AnimationCurve LatForceVsLatFricFactor;        //Defines how much the wheel starts to lose friction as more lateral force is applied
 
     RaycastHit hit;
         
@@ -29,9 +29,9 @@ public class VehicleWheel : MonoBehaviour
             //Do lateral friction
             if (Grounded)
             {                
-                var force_lateral = Vector3.Dot(ParentVehicle.rb.GetPointVelocity(transform.position), transform.up) * transform.up;
-
-                float latFrictionFactor = FrictionLateral;
+                Vector3 force_lateral = Vector3.Dot(ParentVehicle.rb.GetPointVelocity(transform.position), transform.up) * transform.up;
+                float latFrictionFactor = LatForceVsLatFricFactor.Evaluate(force_lateral.magnitude);
+                Debug.Log(gameObject.name + "     " + force_lateral.magnitude);
 
                 if (Input.GetAxis("Handbrake") > 0)
                 {

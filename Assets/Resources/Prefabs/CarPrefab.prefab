@@ -548,10 +548,30 @@ MonoBehaviour:
   ParentVehicle: {fileID: 11496544}
   Radius: 0.7
   GroundedThreshold: 0.1
-  Grounded: 0
+  Grounded: 1
   DebugRay: 1
-  FrictionLateral: 0.8
   FrictionLateral_Drift: 0.1
+  LatForceVsLatFricFactor:
+    serializedVersion: 2
+    m_Curve:
+    - time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+    - time: 6.3
+      value: 0.97999996
+      inSlope: -0.008548539
+      outSlope: -0.008548539
+      tangentMode: 0
+    - time: 17
+      value: 0.1
+      inSlope: -0.0001051105
+      outSlope: -0.0001051105
+      tangentMode: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 0
 --- !u!114 &11415076
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -583,10 +603,30 @@ MonoBehaviour:
   ParentVehicle: {fileID: 11496544}
   Radius: 0.7
   GroundedThreshold: 0.1
-  Grounded: 0
+  Grounded: 1
   DebugRay: 1
-  FrictionLateral: 0.5
   FrictionLateral_Drift: 0.1
+  LatForceVsLatFricFactor:
+    serializedVersion: 2
+    m_Curve:
+    - time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+    - time: 6.3
+      value: 0.97999996
+      inSlope: -0.008548539
+      outSlope: -0.008548539
+      tangentMode: 0
+    - time: 17
+      value: 0.1
+      inSlope: -0.0001051105
+      outSlope: -0.0001051105
+      tangentMode: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 0
 --- !u!114 &11447208
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -601,10 +641,30 @@ MonoBehaviour:
   ParentVehicle: {fileID: 11496544}
   Radius: 0.7
   GroundedThreshold: 0.1
-  Grounded: 0
+  Grounded: 1
   DebugRay: 1
-  FrictionLateral: 0.8
   FrictionLateral_Drift: 0.1
+  LatForceVsLatFricFactor:
+    serializedVersion: 2
+    m_Curve:
+    - time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+    - time: 6.3
+      value: 0.97999996
+      inSlope: -0.008548539
+      outSlope: -0.008548539
+      tangentMode: 0
+    - time: 17
+      value: 0.1
+      inSlope: -0.0001051105
+      outSlope: -0.0001051105
+      tangentMode: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 0
 --- !u!114 &11460072
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -641,10 +701,30 @@ MonoBehaviour:
   ParentVehicle: {fileID: 11496544}
   Radius: 0.7
   GroundedThreshold: 0.1
-  Grounded: 0
+  Grounded: 1
   DebugRay: 1
-  FrictionLateral: 0.5
   FrictionLateral_Drift: 0.1
+  LatForceVsLatFricFactor:
+    serializedVersion: 2
+    m_Curve:
+    - time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+    - time: 6.3
+      value: 0.97999996
+      inSlope: -0.008548539
+      outSlope: -0.008548539
+      tangentMode: 0
+    - time: 17
+      value: 0.1
+      inSlope: -0.0001051105
+      outSlope: -0.0001051105
+      tangentMode: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 0
 --- !u!114 &11496544
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -674,7 +754,7 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 0
-  UseDownforce: 0
+  UseDownforce: 1
   Wheel_FR: {fileID: 11487108}
   Wheel_FL: {fileID: 11418764}
   Wheel_BR: {fileID: 11447208}
