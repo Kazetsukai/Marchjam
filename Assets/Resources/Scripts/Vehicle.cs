@@ -74,7 +74,7 @@ public class Vehicle : MonoBehaviour
         Wheel_FR.transform.localEulerAngles = new Vector3(Wheel_FR.transform.localEulerAngles.x, steering * MaxSteeringAngle * SpeedVsSteeringFactor.Evaluate(rb.velocity.magnitude), Wheel_FR.transform.localEulerAngles.z);
         Wheel_FL.transform.localEulerAngles = new Vector3(Wheel_FL.transform.localEulerAngles.x, steering * MaxSteeringAngle * SpeedVsSteeringFactor.Evaluate(rb.velocity.magnitude), Wheel_FL.transform.localEulerAngles.z);
 
-        Debug.Log(rb.velocity.magnitude);
+        //Debug.Log(rb.velocity.magnitude);
 
         //Apply downforce
         if (UseDownforce)
