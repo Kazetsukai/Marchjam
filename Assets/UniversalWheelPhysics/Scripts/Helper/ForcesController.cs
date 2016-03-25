@@ -23,10 +23,12 @@ public class ForcesController : MonoBehaviour
 
 	public float GForce;
 
+    public bool FWD = true;
+    public bool RWD = true;
 
 
-	// Use this for initialization
-	void Start ()
+    // Use this for initialization
+    void Start ()
 	{
 		rb = GetComponent<Rigidbody> ();
 	}
@@ -82,7 +84,7 @@ public class ForcesController : MonoBehaviour
 		frontLeftWheel.transform.localEulerAngles = new Vector3 (0, Input.GetAxis ("Horizontal") * steerAngle, 0);
 		frontRightWheel.transform.localEulerAngles = new Vector3 (0, Input.GetAxis ("Horizontal") * steerAngle, 0);
 
-		/*
+        /*
 		float _brakingForce = -Mathf.Clamp (Input.GetAxis ("Vertical"), -1, 0) * brakeForce;
 		rearRightWheel.axisBrake = _brakingForce;
 		rearLeftWheel.axisBrake = _brakingForce;
@@ -90,8 +92,16 @@ public class ForcesController : MonoBehaviour
 		frontRightWheel.axisBrake = _brakingForce;
 		*/
 
-		rearRightWheel.axisTorque = Input.GetAxis ("Vertical") * maxTorque;
-		rearLeftWheel.axisTorque = Input.GetAxis ("Vertical") * maxTorque;
+        if (RWD)
+        {
+            rearRightWheel.axisTorque = Input.GetAxis("Vertical") * maxTorque;
+            rearLeftWheel.axisTorque = Input.GetAxis("Vertical") * maxTorque;
+        }
 
-	}
+        if (FWD)
+        {
+            frontRightWheel.axisTorque = Input.GetAxis("Vertical") * maxTorque;
+            frontLeftWheel.axisTorque = Input.GetAxis("Vertical") * maxTorque;
+        }
+    }
 }
