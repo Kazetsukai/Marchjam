@@ -12,7 +12,7 @@ public class TurretController : MonoBehaviour
 	private Transform _car;
 	private Transform _barrel;
 	private float damping = 100f;
-	private float initialBulletForce = 100f;
+	private float initialBulletForce = 40f;
 	private float cooldown = 0f;
 
 	// Use this for initialization
@@ -49,15 +49,26 @@ public class TurretController : MonoBehaviour
 
 		var lookAtLocalTurret = _transform.InverseTransformPoint(lookAt);
 
-		var liftDir = lookAtLocalTurret - _barrel.localPosition;
-		liftDir.x = 0;
-		var lift = Quaternion.LookRotation(liftDir, Vector3.up);
+		var rawr = lookAtLocalTurret - _barrel.localPosition;
 
-		var clampAngle = liftDir.y > 0 ? maxBarrelLift : maxBarrelDrop;
-		if (Quaternion.Angle(lift, Quaternion.identity) >= clampAngle)
-			lift = Quaternion.RotateTowards(Quaternion.identity, lift, clampAngle);
+		var g = 9.81f; // gravity
+		var v = 40; // velocity
+		var x = lookDir.magnitude; // target x
+		var y = rawr.y; // target y
+		var s = (v * v * v * v) - g * (g * (x * x) + 2 * y * (v * v)); //substitution
+		//var o1 = Mathf.Atan(((v * v) + Mathf.Sqrt(s)) / (g * x)) * Mathf.Rad2Deg; // launch angle
+		var o2 = Mathf.Atan(((v * v) - Mathf.Sqrt(s)) / (g * x)) * Mathf.Rad2Deg; // launch angle
 
-		_barrel.localRotation = Quaternion.RotateTowards(_barrel.localRotation, lift, Time.deltaTime * damping);
+		if (float.IsNaN(o2))
+		{
+			print("no firing solution");
+		}
+		else
+		{
+			var lift = Quaternion.Euler(-o2, 0, 0);
+
+			_barrel.localRotation = Quaternion.RotateTowards(_barrel.localRotation, lift, Time.deltaTime * damping);
+		}
 
 		var mousedown = Input.GetAxis("Fire1");
 
