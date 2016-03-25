@@ -318,6 +318,9 @@ MonoBehaviour:
   BodyTurnRate: 5
   MaxCannonAngle: 30
   CannonTurnRate: 0.5
+  ProjectilePrefab: {fileID: 180174, guid: 5b14d9d1df752444491b22564ddcc023, type: 2}
+  InitialProjectileForce: 30
+  FiringCooldown: 3
 --- !u!135 &13551706
 SphereCollider:
   m_ObjectHideFlags: 1

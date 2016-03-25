@@ -15,6 +15,13 @@ public class FlyingCannonEnemy : MonoBehaviour {
     [SerializeField] float MaxCannonAngle = 30f;
     [SerializeField] float CannonTurnRate = 0.25f;
 
+    [Header("Combat")]
+    [SerializeField] GameObject ProjectilePrefab;
+    [SerializeField] float InitialProjectileForce = 30f;
+    [SerializeField] float FiringCooldown = 3f;
+
+    private float _currentCooldown = 0f;
+
     public Vector3 DesiredMovement
     {
         get;
@@ -28,6 +35,12 @@ public class FlyingCannonEnemy : MonoBehaviour {
     }
 
     public Vector2 DesiredCannonRotation
+    {
+        get;
+        set;
+    }
+
+    public bool Firing
     {
         get;
         set;
@@ -102,8 +115,31 @@ public class FlyingCannonEnemy : MonoBehaviour {
         return rawInput > 0 ? absoluteRotation : -absoluteRotation;
     }
 
+    void FireCannon()
+    {
+        if (_currentCooldown > 0)
+        {
+            return;
+        }
+
+        _currentCooldown = FiringCooldown;
+        GameObject projectile = Instantiate(ProjectilePrefab);
+        projectile.transform.position = _cannon.position + _cannon.forward * 1.7f;
+        projectile.transform.rotation = _cannon.rotation;
+        projectile.GetComponent<Rigidbody>().AddForce(_cannon.forward * InitialProjectileForce, ForceMode.Impulse);
+
+        //Temporary HAXX so I don't have to calculate parabolas and stuff
+        projectile.GetComponent<Rigidbody>().useGravity = false;
+        
+    }
+
     void FixedUpdate()
     {
+        if (_currentCooldown > 0)
+        {
+            _currentCooldown -= Time.fixedDeltaTime;
+        }
+
         /*
         //Temporarily get movement from user input
         DesiredMovement = new Vector3
@@ -163,6 +199,16 @@ public class FlyingCannonEnemy : MonoBehaviour {
         if (DesiredCannonRotation.y != 0)
         {
             RotateCannon(DesiredCannonRotation.y, false);
+        }
+
+        /*
+        //Temporarily get firing from user input
+        Firing = Input.GetAxis("Fire1") > 0;
+        */
+
+        if (Firing)
+        {
+            FireCannon();
         }
     }
 }
