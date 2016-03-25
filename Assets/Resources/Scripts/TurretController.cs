@@ -3,6 +3,8 @@ using System.Collections;
 
 public class TurretController : MonoBehaviour
 {
+	public GameObject projectilePrefab;
+
 	private const float maxTurretRotation = 180f;
 	private const float maxBarrelLift = 30f;
 	private const float maxBarrelDrop = 15f;
@@ -10,6 +12,9 @@ public class TurretController : MonoBehaviour
 	private Transform _car;
 	private Transform _barrel;
 	private float damping = 100f;
+	private float initialBulletForce = 100f;
+	private float cooldown = 0f;
+
 	// Use this for initialization
 	void Start()
 	{
@@ -53,5 +58,20 @@ public class TurretController : MonoBehaviour
 			lift = Quaternion.RotateTowards(Quaternion.identity, lift, clampAngle);
 
 		_barrel.localRotation = Quaternion.RotateTowards(_barrel.localRotation, lift, Time.deltaTime * damping);
+
+		var mousedown = Input.GetAxis("Fire1");
+
+		if (mousedown > 0f && cooldown <= 0f)
+		{
+			var newBullet = GameObject.Instantiate(projectilePrefab);
+			newBullet.transform.position = _barrel.position;
+			newBullet.transform.rotation = _barrel.rotation;
+			newBullet.GetComponent<Rigidbody>().AddForce(_barrel.forward * initialBulletForce, ForceMode.Impulse);
+			print("bang!");
+
+			cooldown = 1f;
+		}
+
+		cooldown -= Time.fixedDeltaTime;
 	}
 }
