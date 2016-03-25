@@ -33,7 +33,7 @@ public class VehicleWheel : MonoBehaviour
 
                 float latFrictionFactor = FrictionLateral;
 
-                if (Input.GetKey(KeyCode.Space))
+                if (Input.GetAxis("Handbrake") > 0)
                 {
                     latFrictionFactor = FrictionLateral_Drift;
                 }
