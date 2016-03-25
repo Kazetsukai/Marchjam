@@ -1,0 +1,23 @@
+v1.1
+25.09.15
+UniversalWheel class:
+-new property: SidewaySlip and ForwardSlip (read only)
+-new property: HasContact (read only)
+-new function: GetGroundHit
+-feature: fluent wheel movement system
+-general little cleanup of code and comments
+
+v1.01
+29.07.15
+-exampleScene: GUI keys instructions
+-exampleScene: different keys for car's pushing
+
+v1.00
+12.07.15 
+-First release
+-Simulation of angular inertia
+-Pacejka friction curve with configurable variables
+-Automatic update of frition curves after their variables change
+-Mixing of forward/sideway forces
+-Suspension affecting other rigidbodies
+-Beta feature: fluent wheel movement
