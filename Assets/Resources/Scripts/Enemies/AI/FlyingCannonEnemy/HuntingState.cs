@@ -55,7 +55,6 @@ namespace AIFlyingCannonEnemy
                 _updateTargetLocation = false;
                 _targetLocation = _aiController.Target.transform.position;
                 targetLocationUpdated = true;
-                Debug.Log("Updated target location");
             }
 
             if (_updateDesiredDistance)
@@ -83,13 +82,10 @@ namespace AIFlyingCannonEnemy
             {
                 if (targetLocationUpdated)
                 {
-                    Debug.Log("Target in range");
-                    //Debug.Log("Hunting finished");
-                    //_aiController.CurrentState = null;
+                    _aiController.CurrentState = null;
                 }
                 else
                 {
-                    Debug.Log("Reached target");
                     _updateTargetLocation = true;
                 }
             }
