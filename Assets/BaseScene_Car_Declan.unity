@@ -485,6 +485,22 @@ Prefab:
       propertyPath: m_RootOrder
       value: 2
       objectReference: {fileID: 0}
+    - target: {fileID: 11460072, guid: aa423dd2d20665e4f8715c36c068299d, type: 2}
+      propertyPath: m_FollowTilt
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 11460072, guid: aa423dd2d20665e4f8715c36c068299d, type: 2}
+      propertyPath: m_FollowVelocity
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 11423104, guid: aa423dd2d20665e4f8715c36c068299d, type: 2}
+      propertyPath: dampingRate
+      value: 200
+      objectReference: {fileID: 0}
+    - target: {fileID: 11423104, guid: aa423dd2d20665e4f8715c36c068299d, type: 2}
+      propertyPath: AttachedCar
+      value: 
+      objectReference: {fileID: 1541261341}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: aa423dd2d20665e4f8715c36c068299d, type: 2}
   m_IsPrefabParent: 0
@@ -895,6 +911,11 @@ Transform:
 --- !u!1 &1541261338 stripped
 GameObject:
   m_PrefabParentObject: {fileID: 133218, guid: aa423dd2d20665e4f8715c36c068299d, type: 2}
+  m_PrefabInternal: {fileID: 890900006}
+--- !u!54 &1541261341 stripped
+Rigidbody:
+  m_PrefabParentObject: {fileID: 5438968, guid: aa423dd2d20665e4f8715c36c068299d,
+    type: 2}
   m_PrefabInternal: {fileID: 890900006}
 --- !u!1001 &1583851808
 Prefab:
