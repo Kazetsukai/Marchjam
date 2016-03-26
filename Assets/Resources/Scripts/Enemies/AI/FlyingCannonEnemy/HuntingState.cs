@@ -52,17 +52,21 @@ namespace AIFlyingCannonEnemy
             bool targetLocationUpdated = false;
             if (_updateTargetLocation)
             {
+                _updateTargetLocation = false;
                 _targetLocation = _aiController.Target.transform.position;
                 targetLocationUpdated = true;
+                Debug.Log("Updated target location");
             }
 
             if (_updateDesiredDistance)
             {
+                _updateDesiredDistance = false;
                 _desiredDistance = UnityEngine.Random.Range(_aiController.MinDistance, _aiController.MaxDistance);
             }
 
             if (_updateDesiredHeight)
             {
+                _updateDesiredDistance = false;
                 _desiredHeight = UnityEngine.Random.Range(_aiController.MinHeight, _aiController.MaxHeight);
             }
 
@@ -79,11 +83,12 @@ namespace AIFlyingCannonEnemy
             {
                 if (targetLocationUpdated)
                 {
-                    Debug.Log("Hunting finished");
+                    //Debug.Log("Hunting finished");
                     //_aiController.CurrentState = null;
                 }
                 else
                 {
+                    Debug.Log("Target in range");
                     _updateTargetLocation = true;
                 }
             }
