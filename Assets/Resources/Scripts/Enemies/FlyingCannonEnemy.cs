@@ -8,12 +8,12 @@ public class FlyingCannonEnemy : EnemyBase {
     {
         get;
         private set;
-    }
-
-    
+    }    
 
     [Header("Movement")]
     [SerializeField] public float MaximumSpeed = 60f;
+    [SerializeField] public float StartSpeed = 30f;
+    [SerializeField] public float AccelerationRate = 5f;
     [SerializeField] public float BodyTurnRate = 5f;
 
     [Header("Aiming")]
@@ -108,26 +108,38 @@ public class FlyingCannonEnemy : EnemyBase {
         Cannon.Rotate(rotation ,Space.Self);
     }
 
-    float CapSpeed(float rawInput, float currentVelocity)
+    float CapSpeedIncrement(float rawInput, float currentVelocity)
     {
         if (rawInput == 0)
         {
             return 0;
         }
 
-        float absoluteSpeed = Mathf.Max(Mathf.Abs((rawInput * MaximumSpeed)), MaximumSpeed) - Mathf.Abs(currentVelocity);
+        float targetSpeed = Mathf.Max(Mathf.Abs(rawInput * MaximumSpeed), MaximumSpeed);
+        float absVelocity = Mathf.Abs(currentVelocity);
 
-        return rawInput > 0 ? absoluteSpeed : -absoluteSpeed;
+        if (absVelocity < StartSpeed)
+        {
+            targetSpeed = Mathf.Min(targetSpeed, StartSpeed);
+        }
+        else
+        {
+            targetSpeed = Mathf.Min(targetSpeed, absVelocity + AccelerationRate);
+        }
+
+        targetSpeed -= absVelocity;
+
+        return rawInput > 0 ? targetSpeed : -targetSpeed;
     }
 
-    float CapRotation(float rawInput, float currentTorque)
+    float CapRotationIncrement(float rawInput, float currentTorque)
     {
         if (rawInput == 0)
         {
             return 0;
         }
 
-        float absoluteRotation = Mathf.Max(Mathf.Abs(rawInput * BodyTurnRate), BodyTurnRate);
+        float absoluteRotation = Mathf.Max(Mathf.Abs(rawInput * BodyTurnRate), BodyTurnRate) - Mathf.Abs(currentTorque);
 
         return rawInput > 0 ? absoluteRotation : -absoluteRotation;
     }
@@ -159,76 +171,76 @@ public class FlyingCannonEnemy : EnemyBase {
 
 		if (!Dead)
 		{
-        /*
-        //Temporarily get movement from user input
-        DesiredMovement = new Vector3
-        (
-            Input.GetAxis("Horizontal"),
-            Input.GetAxis("Vertical"),
-            -Input.GetAxis("Pitch")
-        );*/
-
-        if (DesiredMovement.magnitude != 0)
-        {
-				Vector3 localVelocity = _rigidBody.transform.InverseTransformDirection(_rigidBody.velocity);
-            Vector3 actualMovement = new Vector3
+            /*
+            //Temporarily get movement from user input
+            DesiredMovement = new Vector3
             (
-                CapSpeed(DesiredMovement.x, localVelocity.x),
-                CapSpeed(DesiredMovement.y, localVelocity.y),
-                CapSpeed(DesiredMovement.z, localVelocity.z)
-            );
+                Input.GetAxis("Horizontal"),
+                Input.GetAxis("Vertical"),
+                -Input.GetAxis("Pitch")
+            );*/
 
-				_rigidBody.AddRelativeForce(actualMovement);
-        }
+            Vector3 localVelocity = _rigidBody.transform.InverseTransformDirection(_rigidBody.velocity);
+            if (DesiredMovement.magnitude != 0)
+            {
+                Vector3 actualMovement = new Vector3
+                (
+                    CapSpeedIncrement(DesiredMovement.x, localVelocity.x),
+                    CapSpeedIncrement(DesiredMovement.y, localVelocity.y),
+                    CapSpeedIncrement(DesiredMovement.z, localVelocity.z)
+                );
 
-        /*
-        //Temporarily get rotation from user input
-        DesiredBodyRotation = new Vector3
-        (
-            Input.GetAxis("RotateVertical"),
-            Input.GetAxis("RotateHorizontal")
-        );*/
+				_rigidBody.AddRelativeForce(actualMovement, ForceMode.Acceleration);
+            }
 
-        if (DesiredBodyRotation.magnitude != 0)
-        {
-				Vector3 localAngularVelocity = _rigidBody.transform.InverseTransformDirection(_rigidBody.angularVelocity);
-            Vector3 actualRotation = new Vector3
+            /*
+            //Temporarily get rotation from user input
+            DesiredBodyRotation = new Vector3
             (
-                CapRotation(DesiredBodyRotation.x, localAngularVelocity.x), 
-                CapRotation(DesiredBodyRotation.y, localAngularVelocity.y), 
-                CapRotation(DesiredBodyRotation.z, localAngularVelocity.z)
-            );
+                Input.GetAxis("RotateVertical"),
+                Input.GetAxis("RotateHorizontal")
+            );*/
+
+            Vector3 localAngularVelocity = _rigidBody.transform.InverseTransformDirection(_rigidBody.angularVelocity);
+            if (DesiredBodyRotation.magnitude != 0)
+            {				
+                Vector3 actualRotation = new Vector3
+                (
+                    CapRotationIncrement(DesiredBodyRotation.x, localAngularVelocity.x), 
+                    CapRotationIncrement(DesiredBodyRotation.y, localAngularVelocity.y), 
+                    CapRotationIncrement(DesiredBodyRotation.z, localAngularVelocity.z)
+                );
 
 				_rigidBody.AddRelativeTorque(actualRotation);
-        }
+            }
 
-        /*
-        //Temporarily get cannon direction from user input
-        DesiredCannonRotation = new Vector2
-        (
-            Input.GetAxis("RotateVertical"),
-            Input.GetAxis("RotateHorizontal")
-        );*/
+            /*
+            //Temporarily get cannon direction from user input
+            DesiredCannonRotation = new Vector2
+            (
+                Input.GetAxis("RotateVertical"),
+                Input.GetAxis("RotateHorizontal")
+            );*/
 
-        if (DesiredCannonRotation.x != 0)
-        {
-            RotateCannon(DesiredCannonRotation.x, true);            
-        }
+            if (DesiredCannonRotation.x != 0)
+            {
+                RotateCannon(DesiredCannonRotation.x, true);            
+            }
 
-        if (DesiredCannonRotation.y != 0)
-        {
-            RotateCannon(DesiredCannonRotation.y, false);
-        }
+            if (DesiredCannonRotation.y != 0)
+            {
+                RotateCannon(DesiredCannonRotation.y, false);
+            }
 
-        /*
-        //Temporarily get firing from user input
-        Firing = Input.GetAxis("Fire1") > 0;
-        */
+            /*
+            //Temporarily get firing from user input
+            Firing = Input.GetAxis("Fire1") > 0;
+            */
 
-        if (Firing)
-        {
-            FireCannon();
-        }
+            if (Firing)
+            {
+                FireCannon();
+            }
 		}
 		else
 		{
