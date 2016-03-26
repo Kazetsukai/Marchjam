@@ -69,7 +69,7 @@ namespace AIFlyingCannonEnemy
                 _desiredHeight = UnityEngine.Random.Range(_aiController.MinHeight, _aiController.MaxHeight);
             }
 
-            _targetHeading = _targetLocation - _controlledEntity.RigidBody.position;
+            _targetHeading = _targetLocation - _controlledEntity._rigidBody.position;
             _targetDistance = _targetHeading.magnitude;
             _targetDirection = _targetHeading / _targetDistance;
 
@@ -103,9 +103,9 @@ namespace AIFlyingCannonEnemy
 
             Vector3 currentRotationDegrees = new Vector3
             (
-                _controlledEntity.RigidBody.rotation.eulerAngles.x - (_controlledEntity.RigidBody.rotation.eulerAngles.x > 180 ? 360 : 0),
-                _controlledEntity.RigidBody.rotation.eulerAngles.y - (_controlledEntity.RigidBody.rotation.eulerAngles.y > 180 ? 360 : 0),
-                _controlledEntity.RigidBody.rotation.eulerAngles.z - (_controlledEntity.RigidBody.rotation.eulerAngles.z > 180 ? 360 : 0)
+                _controlledEntity._rigidBody.rotation.eulerAngles.x - (_controlledEntity._rigidBody.rotation.eulerAngles.x > 180 ? 360 : 0),
+                _controlledEntity._rigidBody.rotation.eulerAngles.y - (_controlledEntity._rigidBody.rotation.eulerAngles.y > 180 ? 360 : 0),
+                _controlledEntity._rigidBody.rotation.eulerAngles.z - (_controlledEntity._rigidBody.rotation.eulerAngles.z > 180 ? 360 : 0)
             );
 
             _controlledEntity.DesiredBodyRotation = new Vector3
@@ -131,7 +131,7 @@ namespace AIFlyingCannonEnemy
                 return true;
             }
 
-            Vector3 localTargetDirection = _controlledEntity.RigidBody.transform.InverseTransformDirection(_targetDirection);
+            Vector3 localTargetDirection = _controlledEntity._rigidBody.transform.InverseTransformDirection(_targetDirection);
             _controlledEntity.DesiredMovement = new Vector3
             (
                 localTargetDirection.x,
@@ -144,7 +144,7 @@ namespace AIFlyingCannonEnemy
 
         bool MoveToCorrectHeight()
         {
-            if (Mathf.Abs(_desiredHeight - _controlledEntity.RigidBody.position.y) < _aiController.DistanceAndHeightThreshold)
+            if (Mathf.Abs(_desiredHeight - _controlledEntity._rigidBody.position.y) < _aiController.DistanceAndHeightThreshold)
             {
                 _controlledEntity.DesiredMovement = new Vector3
                 (
@@ -158,7 +158,7 @@ namespace AIFlyingCannonEnemy
             _controlledEntity.DesiredMovement = new Vector3
             (
                 _controlledEntity.DesiredMovement.x,
-                (_desiredHeight - _controlledEntity.RigidBody.position.y) > 0 ? 1 : -1,
+                (_desiredHeight - _controlledEntity._rigidBody.position.y) > 0 ? 1 : -1,
                 _controlledEntity.DesiredMovement.z
             );
 

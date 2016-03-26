@@ -2,9 +2,9 @@
 using System.Collections;
 using System.Linq;
 
-public class FlyingCannonEnemy : MonoBehaviour {
+public class FlyingCannonEnemy : EnemyBase {
 
-    public Rigidbody RigidBody
+    public Rigidbody _rigidBody
     {
         get;
         private set;
@@ -53,18 +53,21 @@ public class FlyingCannonEnemy : MonoBehaviour {
     }
 
 	// Use this for initialization
-	void Start () {
-        RigidBody = GetComponent<Rigidbody>();
-        Cannon = GetComponentsInChildren<Transform>().FirstOrDefault(t => t.name == "Cannon");
-	}
-	
-	// Update is called once per frame
-	void Update () {
-	    
+	public new void Start()
+	{
+		_rigidBody = GetComponent<Rigidbody>();
+		Cannon = GetComponentsInChildren<Transform>().FirstOrDefault(t => t.name == "Cannon");
+		base.Start();
 	}
 
-    //If not rotating on X, rotating on Y
-    void RotateCannon(float rotationChange, bool rotateOnX)
+	// Update is called once per frame
+	public new void Update()
+	{
+		base.Update();
+	}
+
+	//If not rotating on X, rotating on Y
+	void RotateCannon(float rotationChange, bool rotateOnX)
     {
         if (rotationChange == 0)
         {
@@ -139,82 +142,91 @@ public class FlyingCannonEnemy : MonoBehaviour {
         
     }
 
-    void FixedUpdate()
-    {
-        if (_currentCooldown > 0)
-        {
-            _currentCooldown -= Time.fixedDeltaTime;
-        }
+	public new void FixedUpdate()
+	{
+		if (_currentCooldown > 0)
+		{
+			_currentCooldown -= Time.fixedDeltaTime;
+		}
 
-        /*
-        //Temporarily get movement from user input
-        DesiredMovement = new Vector3
-        (
-            Input.GetAxis("Horizontal"),
-            Input.GetAxis("Vertical"),
-            -Input.GetAxis("Pitch")
-        );*/
+		if (!Dead)
+		{
+			/*
+			//Temporarily get movement from user input
+			DesiredMovement = new Vector3
+			(
+				Input.GetAxis("Horizontal"),
+				Input.GetAxis("Vertical"),
+				-Input.GetAxis("Pitch")
+			);*/
 
-        if (DesiredMovement.magnitude != 0)
-        {
-            Vector3 localVelocity = RigidBody.transform.InverseTransformDirection(RigidBody.velocity);
-            Vector3 actualMovement = new Vector3
-            (
-                CapSpeed(DesiredMovement.x, localVelocity.x),
-                CapSpeed(DesiredMovement.y, localVelocity.y),
-                CapSpeed(DesiredMovement.z, localVelocity.z)
-            );
+			if (DesiredMovement.magnitude != 0)
+			{
+				Vector3 localVelocity = _rigidBody.transform.InverseTransformDirection(_rigidBody.velocity);
+				Vector3 actualMovement = new Vector3
+				(
+					CapSpeed(DesiredMovement.x, localVelocity.x),
+					CapSpeed(DesiredMovement.y, localVelocity.y),
+					CapSpeed(DesiredMovement.z, localVelocity.z)
+				);
 
-            RigidBody.AddRelativeForce(actualMovement);
-        }
+				_rigidBody.AddRelativeForce(actualMovement);
+			}
 
-        /*
-        //Temporarily get rotation from user input
-        DesiredBodyRotation = new Vector3
-        (
-            Input.GetAxis("RotateVertical"),
-            Input.GetAxis("RotateHorizontal")
-        );*/
+			/*
+			//Temporarily get rotation from user input
+			DesiredBodyRotation = new Vector3
+			(
+				Input.GetAxis("RotateVertical"),
+				Input.GetAxis("RotateHorizontal")
+			);*/
 
-        if (DesiredBodyRotation.magnitude != 0)
-        {
-            Vector3 localAngularVelocity = RigidBody.transform.InverseTransformDirection(RigidBody.angularVelocity);
-            Vector3 actualRotation = new Vector3
-            (
-                CapRotation(DesiredBodyRotation.x, localAngularVelocity.x), 
-                CapRotation(DesiredBodyRotation.y, localAngularVelocity.y), 
-                CapRotation(DesiredBodyRotation.z, localAngularVelocity.z)
-            );
+			if (DesiredBodyRotation.magnitude != 0)
+			{
+				Vector3 localAngularVelocity = _rigidBody.transform.InverseTransformDirection(_rigidBody.angularVelocity);
+				Vector3 actualRotation = new Vector3
+				(
+					CapRotation(DesiredBodyRotation.x, localAngularVelocity.x),
+					CapRotation(DesiredBodyRotation.y, localAngularVelocity.y),
+					CapRotation(DesiredBodyRotation.z, localAngularVelocity.z)
+				);
 
-            RigidBody.AddRelativeTorque(actualRotation);
-        }
+				_rigidBody.AddRelativeTorque(actualRotation);
+			}
 
-        /*
-        //Temporarily get cannon direction from user input
-        DesiredCannonRotation = new Vector2
-        (
-            Input.GetAxis("RotateVertical"),
-            Input.GetAxis("RotateHorizontal")
-        );*/
+			/*
+			//Temporarily get cannon direction from user input
+			DesiredCannonRotation = new Vector2
+			(
+				Input.GetAxis("RotateVertical"),
+				Input.GetAxis("RotateHorizontal")
+			);*/
 
-        if (DesiredCannonRotation.x != 0)
-        {
-            RotateCannon(DesiredCannonRotation.x, true);            
-        }
+			if (DesiredCannonRotation.x != 0)
+			{
+				RotateCannon(DesiredCannonRotation.x, true);
+			}
 
-        if (DesiredCannonRotation.y != 0)
-        {
-            RotateCannon(DesiredCannonRotation.y, false);
-        }
+			if (DesiredCannonRotation.y != 0)
+			{
+				RotateCannon(DesiredCannonRotation.y, false);
+			}
 
-        /*
-        //Temporarily get firing from user input
-        Firing = Input.GetAxis("Fire1") > 0;
-        */
+			/*
+			//Temporarily get firing from user input
+			Firing = Input.GetAxis("Fire1") > 0;
+			*/
 
-        if (Firing)
-        {
-            FireCannon();
-        }
-    }
+			if (Firing)
+			{
+				FireCannon();
+			} 
+		}
+		else
+		{
+			_rigidBody.useGravity = true;
+		}
+
+		base.FixedUpdate();
+	}
 }
