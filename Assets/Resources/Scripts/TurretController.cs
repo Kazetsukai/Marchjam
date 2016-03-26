@@ -66,7 +66,7 @@ public class TurretController : MonoBehaviour
 
 		if (float.IsNaN(o2))
 		{
-			print("no firing solution");
+			//print("no firing solution");
 		}
 		else
 		{
@@ -96,7 +96,7 @@ public class TurretController : MonoBehaviour
 		if (Quaternion.Angle(lift, Quaternion.identity) >= clampAngle)
 			lift = Quaternion.RotateTowards(Quaternion.identity, lift, clampAngle);
 
-		print(Quaternion.Angle(lift, Quaternion.identity));
+		//print(Quaternion.Angle(lift, Quaternion.identity));
 		_barrel.localRotation = Quaternion.RotateTowards(_barrel.localRotation, lift, Time.deltaTime * damping);
 		
 		var mousedown = Input.GetAxis("Fire1");

@@ -8,6 +8,9 @@ namespace Marchjam.Networking
 {
     public class NetworkDiscovery : MonoBehaviour
     {
+        public const int CONNECTION_PORT = 41327;
+        public const int BROADCAST_PORT = 41326;
+
         private byte _reliableChannelId;
         private byte _stateUpdateChannelId;
 
@@ -18,7 +21,6 @@ namespace Marchjam.Networking
         byte[] _msgOutBuffer = null;
         byte[] _msgInBuffer = null;
         private readonly int kMaxBroadcastMsgSize = 1024;
-        private int _broadcastPort = 41326;
         private int _broadcastKey = 1337;
         private int _broadcastVersion = 1;
         private int _broadcastSubVersion = 0;
@@ -26,10 +28,7 @@ namespace Marchjam.Networking
         private string _broadcastData = "HELLO";
         private NetworkClientController _client;
         private NetworkServerController _server;
-
-        public bool Connected { get; private set; }
-
-
+        
         static byte[] GetBytes(string str)
         {
             byte[] bytes = new byte[str.Length * sizeof(char)];
@@ -88,19 +87,36 @@ namespace Marchjam.Networking
 
             StartAsClient();
 
+            string address = null;
+
             for (int i = 0; i < 5; i++)
             {
                 yield return new WaitForSeconds(1);
 
                 Debug.Log("Checking messages...");
-                ListenBroadcast((add, msg) => Debug.Log("Address: " + add + ", Message: " + msg));
+                ListenBroadcast((add, msg) =>
+                {
+                    address = add;
+                });
+
+                if (address != null)
+                    break;
             }
 
             StopBroadcast();
 
+            if (address == null)
+            {
+                Debug.Log("I am become server!");
+                StartAsServer();
 
-            Debug.Log("I am become server!");
-            StartAsServer();
+                transform.FindChild("Server").gameObject.SetActive(true);
+            }
+            else
+            {
+                transform.FindChild("Client").gameObject.SetActive(true);
+                GetComponentInChildren<NetworkClientController>().Address = address;
+            }
         }
 
         // Update is called once per frame
@@ -156,7 +172,7 @@ namespace Marchjam.Networking
             cc.AddChannel(QosType.Unreliable);
             HostTopology defaultTopology = new HostTopology(cc, 1);
 
-            _hostId = NetworkTransport.AddHost(defaultTopology, _broadcastPort);
+            _hostId = NetworkTransport.AddHost(defaultTopology, BROADCAST_PORT);
             if (_hostId == -1)
             {
                 Debug.LogError("NetworkDiscovery StartAsClient - addHost failed");
@@ -193,7 +209,7 @@ namespace Marchjam.Networking
             }
 
             byte err;
-            if (!NetworkTransport.StartBroadcastDiscovery(_hostId, _broadcastPort, _broadcastKey, _broadcastVersion, _broadcastSubVersion, _msgOutBuffer, _msgOutBuffer.Length, 1000, out err))
+            if (!NetworkTransport.StartBroadcastDiscovery(_hostId, BROADCAST_PORT, _broadcastKey, _broadcastVersion, _broadcastSubVersion, _msgOutBuffer, _msgOutBuffer.Length, 1000, out err))
             {
                 Debug.LogError("NetworkDiscovery StartBroadcast failed err: " + err);
                 return false;

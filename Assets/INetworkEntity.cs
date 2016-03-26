@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Assets
 {
-    class INetworkEntity
+    interface INetworkEntity
     {
     }
 }
