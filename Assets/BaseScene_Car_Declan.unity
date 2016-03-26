@@ -368,6 +368,10 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1811337469}
   m_RootOrder: 1
+--- !u!4 &844171323 stripped
+Transform:
+  m_PrefabParentObject: {fileID: 473320, guid: aa423dd2d20665e4f8715c36c068299d, type: 2}
+  m_PrefabInternal: {fileID: 890900006}
 --- !u!1001 &890900006
 Prefab:
   m_ObjectHideFlags: 0
@@ -405,12 +409,8 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 429700, guid: aa423dd2d20665e4f8715c36c068299d, type: 2}
       propertyPath: m_RootOrder
-      value: 2
+      value: 1
       objectReference: {fileID: 0}
-    - target: {fileID: 11423104, guid: aa423dd2d20665e4f8715c36c068299d, type: 2}
-      propertyPath: projectilePrefab
-      value: 
-      objectReference: {fileID: 129694, guid: bbd9b8f08905f6649b5b53b1416155c4, type: 2}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: aa423dd2d20665e4f8715c36c068299d, type: 2}
   m_IsPrefabParent: 0
@@ -720,6 +720,33 @@ Prefab:
 Transform:
   m_PrefabParentObject: {fileID: 400000, guid: 4e11ef4f39bc65e44a4b0755ecac6ea1, type: 2}
   m_PrefabInternal: {fileID: 1583851808}
+--- !u!1 &1685045347
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  serializedVersion: 4
+  m_Component:
+  - 4: {fileID: 1685045348}
+  m_Layer: 0
+  m_Name: bullet_start
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1685045348
+Transform:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1685045347}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 1.25}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 844171323}
+  m_RootOrder: 1
 --- !u!1 &1811337468
 GameObject:
   m_ObjectHideFlags: 0
