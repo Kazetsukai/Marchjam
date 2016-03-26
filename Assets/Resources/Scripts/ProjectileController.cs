@@ -6,6 +6,8 @@ public class ProjectileController : MonoBehaviour
 	public float TimeToLive = 30f;
 	public GameObject Explosion;
 	private Rigidbody _rigidbody;
+	private float damageModifier = 25f;
+	private float explosionDist = 2f;
 
 	// Use this for initialization
 	void Start()
@@ -34,8 +36,20 @@ public class ProjectileController : MonoBehaviour
 
 	void OnTriggerEnter()
 	{
-		Destroy(gameObject);
 		var explosion = (GameObject)Instantiate(Explosion, transform.position, Quaternion.identity);
+		var hits = Physics.OverlapSphere(transform.position, explosionDist);
+		print("hit " + hits.Length);
+		foreach (var col in hits)
+		{
+			var enemy = col.GetComponentInParent<EnemyBase>();
+			if (enemy != null)
+			{
+				var dist = (transform.position - enemy.transform.position).magnitude;
+				var damage = 1/(dist + 0.5f) * damageModifier;
+				enemy.YaGotShot(damage);
+			}
+		}
 		Destroy(explosion, 5f);
+		Destroy(gameObject);
 	}
 }

@@ -15,6 +15,7 @@ public class TurretController : MonoBehaviour
 	private float damping = 100f;
 	private float initialBulletForce = 40f;
 	private float cooldown = 0f;
+	public Vector3 cursorPosition;
 
 	// Use this for initialization
 	void Start()
@@ -34,11 +35,11 @@ public class TurretController : MonoBehaviour
 	void FixedUpdate()
 	{
 		var mousePos = Input.mousePosition;
-		var worldMousePos = Camera.main.ScreenPointToRay(mousePos);
-		RaycastHit hitInfo;
-		var hit = Physics.Raycast(worldMousePos, out hitInfo);
+		var mouseWorldRay = Camera.main.ScreenPointToRay(mousePos);
+		RaycastHit mouseRayHitInfo;
+		var hit = Physics.Raycast(mouseWorldRay, out mouseRayHitInfo);
 
-		var targetPos = hit ? hitInfo.point : worldMousePos.GetPoint(100000);
+		var targetPos = hit ? mouseRayHitInfo.point : mouseWorldRay.GetPoint(100000);
 
 		var lookDir = targetPos - _barrel.position;
 
@@ -66,7 +67,7 @@ public class TurretController : MonoBehaviour
 
 		if (float.IsNaN(o2))
 		{
-			print("no firing solution");
+			//print("no firing solution");
 		}
 		else
 		{
@@ -81,8 +82,8 @@ public class TurretController : MonoBehaviour
 
 		var rotation = Quaternion.LookRotation(yawDir.normalized, Vector3.up);
 
-		//if (Quaternion.Angle(rotation, Quaternion.identity) >= maxTurretRotation)
-		//	rotation = Quaternion.RotateTowards(Quaternion.identity, rotation, maxTurretRotation);
+		if (Quaternion.Angle(rotation, Quaternion.identity) >= maxTurretRotation)
+			rotation = Quaternion.RotateTowards(Quaternion.identity, rotation, maxTurretRotation);
 
 		transform.localRotation = Quaternion.RotateTowards(transform.localRotation, rotation, Time.deltaTime * damping);
 
@@ -96,9 +97,34 @@ public class TurretController : MonoBehaviour
 		if (Quaternion.Angle(lift, Quaternion.identity) >= clampAngle)
 			lift = Quaternion.RotateTowards(Quaternion.identity, lift, clampAngle);
 
-		print(Quaternion.Angle(lift, Quaternion.identity));
+		//print(Quaternion.Angle(lift, Quaternion.identity));
 		_barrel.localRotation = Quaternion.RotateTowards(_barrel.localRotation, lift, Time.deltaTime * damping);
-		
+
+		//show current aim
+
+		int numSteps = 100;
+		float timeDelta = 1.0f / 20f;
+		Vector3 gravity = new Vector3(0, -9.8f, 0);
+
+		Vector3 position = _bulletStartPoint.position;
+		Vector3 velocity = _barrel.forward * initialBulletForce;
+		for (int i = 0; i < numSteps; ++i)
+		{
+			Debug.DrawLine(position, position + velocity.normalized * 2, Color.red);
+
+			RaycastHit hitInfo;
+			if (Physics.Raycast(position, velocity.normalized, out hitInfo, 2))
+			{
+				cursorPosition = hitInfo.point;
+			}
+
+			position += velocity * timeDelta + 0.5f * gravity * timeDelta * timeDelta;
+			velocity += (gravity * timeDelta);
+		}
+
+
+		//shooting
+
 		var mousedown = Input.GetAxis("Fire1");
 
 		if (mousedown > 0f && cooldown <= 0f)

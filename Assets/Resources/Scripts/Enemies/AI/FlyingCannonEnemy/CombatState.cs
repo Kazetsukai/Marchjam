@@ -25,7 +25,7 @@ namespace AIFlyingCannonEnemy
 
         protected override void OnFixedUpdate()
         {
-            _targetHeading = _aiController.Target.transform.position - _controlledEntity.RigidBody.position;
+            _targetHeading = _aiController.Target.transform.position - _controlledEntity._rigidBody.position;
             _targetDistance = _targetHeading.magnitude;
             _targetDirection = _targetHeading / _targetDistance;
 
@@ -105,9 +105,9 @@ namespace AIFlyingCannonEnemy
 
             Vector3 currentRotationDegrees = new Vector3
             (
-                _controlledEntity.RigidBody.rotation.eulerAngles.x - (_controlledEntity.RigidBody.rotation.eulerAngles.x > 180 ? 360 : 0),
-                _controlledEntity.RigidBody.rotation.eulerAngles.y - (_controlledEntity.RigidBody.rotation.eulerAngles.y > 180 ? 360 : 0),
-                _controlledEntity.RigidBody.rotation.eulerAngles.z - (_controlledEntity.RigidBody.rotation.eulerAngles.z > 180 ? 360 : 0)
+                _controlledEntity._rigidBody.rotation.eulerAngles.x - (_controlledEntity._rigidBody.rotation.eulerAngles.x > 180 ? 360 : 0),
+                _controlledEntity._rigidBody.rotation.eulerAngles.y - (_controlledEntity._rigidBody.rotation.eulerAngles.y > 180 ? 360 : 0),
+                _controlledEntity._rigidBody.rotation.eulerAngles.z - (_controlledEntity._rigidBody.rotation.eulerAngles.z > 180 ? 360 : 0)
             );
 
             _controlledEntity.DesiredBodyRotation = new Vector3

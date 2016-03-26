@@ -389,6 +389,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a5551f4f0a4096f4ab4039ba477e8a25, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  Health: 100
+  Dead: 0
   MaximumSpeed: 60
   BodyTurnRate: 5
   Cannon: {fileID: 498286}

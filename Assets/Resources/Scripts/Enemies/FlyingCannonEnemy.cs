@@ -2,9 +2,9 @@
 using System.Collections;
 using System.Linq;
 
-public class FlyingCannonEnemy : MonoBehaviour {
+public class FlyingCannonEnemy : EnemyBase {
 
-    public Rigidbody RigidBody
+    public Rigidbody _rigidBody
     {
         get;
         private set;
@@ -65,15 +65,18 @@ public class FlyingCannonEnemy : MonoBehaviour {
     }
 
 	// Use this for initialization
-	void Start () {
-        RigidBody = GetComponent<Rigidbody>();
+	public new void Start()
+	{
+		_rigidBody = GetComponent<Rigidbody>();
         Cannon = GetComponentsInChildren<Transform>().FirstOrDefault(t => t.name == "Cannon");
+		base.Start();
         CurrentCooldown = 0f;
-    }
+	}
 	
 	// Update is called once per frame
-	void Update () {
-	    
+	public new void Update()
+	{
+		base.Update();
 	}
 
     //If not rotating on X, rotating on Y
@@ -147,13 +150,15 @@ public class FlyingCannonEnemy : MonoBehaviour {
         
     }
 
-    void FixedUpdate()
+	public new void FixedUpdate()
     {
         if (CurrentCooldown > 0)
         {
             CurrentCooldown -= Time.fixedDeltaTime;
         }
 
+		if (!Dead)
+		{
         /*
         //Temporarily get movement from user input
         DesiredMovement = new Vector3
@@ -165,7 +170,7 @@ public class FlyingCannonEnemy : MonoBehaviour {
 
         if (DesiredMovement.magnitude != 0)
         {
-            Vector3 localVelocity = RigidBody.transform.InverseTransformDirection(RigidBody.velocity);
+				Vector3 localVelocity = _rigidBody.transform.InverseTransformDirection(_rigidBody.velocity);
             Vector3 actualMovement = new Vector3
             (
                 CapSpeed(DesiredMovement.x, localVelocity.x),
@@ -173,7 +178,7 @@ public class FlyingCannonEnemy : MonoBehaviour {
                 CapSpeed(DesiredMovement.z, localVelocity.z)
             );
 
-            RigidBody.AddRelativeForce(actualMovement);
+				_rigidBody.AddRelativeForce(actualMovement);
         }
 
         /*
@@ -186,7 +191,7 @@ public class FlyingCannonEnemy : MonoBehaviour {
 
         if (DesiredBodyRotation.magnitude != 0)
         {
-            Vector3 localAngularVelocity = RigidBody.transform.InverseTransformDirection(RigidBody.angularVelocity);
+				Vector3 localAngularVelocity = _rigidBody.transform.InverseTransformDirection(_rigidBody.angularVelocity);
             Vector3 actualRotation = new Vector3
             (
                 CapRotation(DesiredBodyRotation.x, localAngularVelocity.x), 
@@ -194,7 +199,7 @@ public class FlyingCannonEnemy : MonoBehaviour {
                 CapRotation(DesiredBodyRotation.z, localAngularVelocity.z)
             );
 
-            RigidBody.AddRelativeTorque(actualRotation);
+				_rigidBody.AddRelativeTorque(actualRotation);
         }
 
         /*
@@ -224,5 +229,12 @@ public class FlyingCannonEnemy : MonoBehaviour {
         {
             FireCannon();
         }
+		}
+		else
+		{
+			_rigidBody.useGravity = true;
+		}
+
+		base.FixedUpdate();
     }
 }
