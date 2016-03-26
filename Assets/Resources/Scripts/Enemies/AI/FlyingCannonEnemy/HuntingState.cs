@@ -4,11 +4,11 @@ using System.Linq;
 using System.Text;
 using UnityEngine;
 
-public partial class AIFlyingCannonEnemy : MonoBehaviour
+namespace AIFlyingCannonEnemy
 {
-    class HuntingState : AIStateBase<FlyingCannonEnemy, AIFlyingCannonEnemy>
+    class HuntingState : AIStateBase<FlyingCannonEnemy, AIController>
     {
-        public HuntingState(FlyingCannonEnemy controlledEntity, AIFlyingCannonEnemy stateOwner)
+        public HuntingState(FlyingCannonEnemy controlledEntity, AIController stateOwner)
             : base(controlledEntity, stateOwner)
         {
             
