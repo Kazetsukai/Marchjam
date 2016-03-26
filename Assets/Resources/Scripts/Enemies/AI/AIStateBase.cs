@@ -4,28 +4,31 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 
-abstract class AIStateBase<EntityType, AIType>
+public abstract class AIStateBase<AIController>
 {
-    public static AIStateBase<EntityType, AIType> InstantiateState(Type newState, EntityType controlledEntity, AIType stateOwner)
+    protected AIController _aiController
     {
-        if (!typeof(AIStateBase<EntityType, AIType>).IsAssignableFrom(newState))
+        get;
+        private set;
+    }
+
+    protected AIStateBase(AIController aiController)
+    {
+        _aiController = aiController;
+    }
+
+    public abstract void OnFixedUpdate();
+
+    //Not used at the moment, but may be useful later if we want to be more abstract about the types we're using
+    public static AIStateBase<AIController> InstantiateState(Type newState, AIController stateOwner)
+    {
+        if (!typeof(AIStateBase<AIController>).IsAssignableFrom(newState))
         {
             throw new InvalidOperationException("Wrong type: " + newState.Name);
         }
 
-        ConstructorInfo stateConstructor = newState.GetConstructor(new Type[] { typeof(EntityType), typeof(AIType) });
-        return stateConstructor.Invoke(new object[] { controlledEntity, stateOwner }) as AIStateBase<EntityType, AIType>;
+        ConstructorInfo stateConstructor = newState.GetConstructor(new Type[] { typeof(AIController) });
+        return stateConstructor.Invoke(new object[] { stateOwner }) as AIStateBase<AIController>;
     }
-
-    protected EntityType _controlledEntity;
-    protected AIType _stateOwner;
-
-    protected AIStateBase(EntityType controlledEntity, AIType stateOwner)
-    {
-        _controlledEntity = controlledEntity;
-        _stateOwner = stateOwner;
-    }
-
-    public abstract void OnFixedUpdate();
 }
 

@@ -7,27 +7,20 @@ namespace AIFlyingCannonEnemy
 {
     public class AIController : MonoBehaviour
     {
-        enum AIState
-        {
-            Hunting
-        }
+        [SerializeField] public FlyingCannonEnemy ControlledEntity;
+        [SerializeField] public GameObject Target;
+        [SerializeField] public float MaxDistance;
+        [SerializeField] public float MinDistance;
+        [SerializeField] public float MaxHeight;
+        [SerializeField] public float MinHeight;
+        [SerializeField] public float DistanceAndHeightThreshold;
 
-        Dictionary<AIState, Type> AIStates = new Dictionary<AIState, Type>()
-    {
-        { AIState.Hunting, typeof(HuntingState) }
-    };
-
-        [SerializeField]
-        FlyingCannonEnemy ControlledEntity;
-        [SerializeField]
-        GameObject Target;
-
-        AIStateBase<FlyingCannonEnemy, AIController> _currentState;
+        public AIStateBase<AIController> CurrentState;
 
         // Use this for initialization
         void Start()
         {
-            _currentState = AIStateBase<FlyingCannonEnemy, AIController>.InstantiateState(AIStates[AIState.Hunting], ControlledEntity, this);
+            CurrentState = new HuntingState(this);
         }
 
         // Update is called once per frame
@@ -38,7 +31,10 @@ namespace AIFlyingCannonEnemy
 
         void FixedUpdate()
         {
-            _currentState.OnFixedUpdate();
+            if (CurrentState != null)
+            {
+                CurrentState.OnFixedUpdate();
+            }
         }
     }
 }

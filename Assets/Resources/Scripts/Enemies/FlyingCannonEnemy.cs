@@ -4,14 +4,20 @@ using System.Linq;
 
 public class FlyingCannonEnemy : MonoBehaviour {
 
-    private Rigidbody _rigidBody;
-    private Transform _cannon;
+    public Rigidbody RigidBody
+    {
+        get;
+        private set;
+    }
+
+    
 
     [Header("Movement")]
     [SerializeField] float MaximumSpeed = 60f;
     [SerializeField] float BodyTurnRate = 5f;
 
     [Header("Aiming")]
+    [SerializeField] public Transform Cannon;
     [SerializeField] float MaxCannonAngle = 30f;
     [SerializeField] float CannonTurnRate = 0.25f;
 
@@ -48,8 +54,8 @@ public class FlyingCannonEnemy : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-        _rigidBody = GetComponentInChildren<Rigidbody>();
-        _cannon = GetComponentsInChildren<Transform>().FirstOrDefault(t => t.name == "Cannon");
+        RigidBody = GetComponent<Rigidbody>();
+        Cannon = GetComponentsInChildren<Transform>().FirstOrDefault(t => t.name == "Cannon");
 	}
 	
 	// Update is called once per frame
@@ -75,7 +81,7 @@ public class FlyingCannonEnemy : MonoBehaviour {
             rotationChange *= -1;
         }
 
-        float currentAngle = rotateOnX ? _cannon.rotation.eulerAngles.x : (_cannon.rotation.eulerAngles.y - 180);
+        float currentAngle = rotateOnX ? Cannon.rotation.eulerAngles.x : (Cannon.rotation.eulerAngles.y - 180);
 
         if (currentAngle > 180)
         {
@@ -88,7 +94,7 @@ public class FlyingCannonEnemy : MonoBehaviour {
         }
 
         Vector3 rotation = new Vector3(rotateOnX ? rotationChange : 0, rotateOnX ? 0 : rotationChange);
-        _cannon.Rotate(rotation);
+        Cannon.Rotate(rotation);
     }
 
     float CapSpeed(float rawInput, float currentVelocity)
@@ -124,9 +130,9 @@ public class FlyingCannonEnemy : MonoBehaviour {
 
         _currentCooldown = FiringCooldown;
         GameObject projectile = Instantiate(ProjectilePrefab);
-        projectile.transform.position = _cannon.position + _cannon.forward * 1.7f;
-        projectile.transform.rotation = _cannon.rotation;
-        projectile.GetComponent<Rigidbody>().AddForce(_cannon.forward * InitialProjectileForce, ForceMode.Impulse);
+        projectile.transform.position = Cannon.position + Cannon.forward * 1.7f;
+        projectile.transform.rotation = Cannon.rotation;
+        projectile.GetComponent<Rigidbody>().AddForce(Cannon.forward * InitialProjectileForce, ForceMode.Impulse);
 
         //Temporary HAXX so I don't have to calculate parabolas and stuff
         projectile.GetComponent<Rigidbody>().useGravity = false;
@@ -151,7 +157,7 @@ public class FlyingCannonEnemy : MonoBehaviour {
 
         if (DesiredMovement.magnitude != 0)
         {
-            Vector3 localVelocity = _rigidBody.transform.InverseTransformDirection(_rigidBody.velocity);
+            Vector3 localVelocity = RigidBody.transform.InverseTransformDirection(RigidBody.velocity);
             Vector3 actualMovement = new Vector3
             (
                 CapSpeed(DesiredMovement.x, localVelocity.x),
@@ -159,7 +165,7 @@ public class FlyingCannonEnemy : MonoBehaviour {
                 CapSpeed(DesiredMovement.z, localVelocity.z)
             );
 
-            _rigidBody.AddRelativeForce(actualMovement);
+            RigidBody.AddRelativeForce(actualMovement);
         }
 
         /*
@@ -172,7 +178,7 @@ public class FlyingCannonEnemy : MonoBehaviour {
 
         if (DesiredBodyRotation.magnitude != 0)
         {
-            Vector3 localAngularVelocity = _rigidBody.transform.InverseTransformDirection(_rigidBody.angularVelocity);
+            Vector3 localAngularVelocity = RigidBody.transform.InverseTransformDirection(RigidBody.angularVelocity);
             Vector3 actualRotation = new Vector3
             (
                 CapRotation(DesiredBodyRotation.x, localAngularVelocity.x), 
@@ -180,7 +186,7 @@ public class FlyingCannonEnemy : MonoBehaviour {
                 CapRotation(DesiredBodyRotation.z, localAngularVelocity.z)
             );
 
-            _rigidBody.AddRelativeTorque(actualRotation);
+            RigidBody.AddRelativeTorque(actualRotation);
         }
 
         /*

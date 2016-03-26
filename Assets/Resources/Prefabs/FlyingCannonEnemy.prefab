@@ -316,6 +316,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   MaximumSpeed: 60
   BodyTurnRate: 5
+  Cannon: {fileID: 464146}
   MaxCannonAngle: 30
   CannonTurnRate: 0.5
   ProjectilePrefab: {fileID: 180174, guid: 5b14d9d1df752444491b22564ddcc023, type: 2}
