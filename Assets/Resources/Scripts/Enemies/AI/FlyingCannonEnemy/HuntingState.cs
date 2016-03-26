@@ -83,12 +83,13 @@ namespace AIFlyingCannonEnemy
             {
                 if (targetLocationUpdated)
                 {
+                    Debug.Log("Target in range");
                     //Debug.Log("Hunting finished");
                     //_aiController.CurrentState = null;
                 }
                 else
                 {
-                    Debug.Log("Target in range");
+                    Debug.Log("Reached target");
                     _updateTargetLocation = true;
                 }
             }
@@ -97,14 +98,25 @@ namespace AIFlyingCannonEnemy
         bool LookAtTarget()
         {
             Quaternion desiredRotation = Quaternion.LookRotation(_targetDirection);
-            Vector3 desiredRotationDegrees = desiredRotation.eulerAngles;
-            Vector3 currentRotationDegrees = _controlledEntity.RigidBody.rotation.eulerAngles;
+            Vector3 desiredRotationDegrees = new Vector3
+            (
+                desiredRotation.eulerAngles.x - (desiredRotation.eulerAngles.x > 180 ? 360 : 0),
+                desiredRotation.eulerAngles.y - (desiredRotation.eulerAngles.y > 180 ? 360 : 0),
+                desiredRotation.eulerAngles.z - (desiredRotation.eulerAngles.z > 180 ? 360 : 0)
+            );
+
+            Vector3 currentRotationDegrees = new Vector3
+            (
+                _controlledEntity.RigidBody.rotation.eulerAngles.x - (_controlledEntity.RigidBody.rotation.eulerAngles.x > 180 ? 360 : 0),
+                _controlledEntity.RigidBody.rotation.eulerAngles.y - (_controlledEntity.RigidBody.rotation.eulerAngles.y > 180 ? 360 : 0),
+                _controlledEntity.RigidBody.rotation.eulerAngles.z - (_controlledEntity.RigidBody.rotation.eulerAngles.z > 180 ? 360 : 0)
+            );
 
             _controlledEntity.DesiredBodyRotation = new Vector3
             (
-                Mathf.Abs(desiredRotationDegrees.x - currentRotationDegrees.x) < _aiController.DistanceAndHeightThreshold ? (desiredRotationDegrees.x > currentRotationDegrees.x ? 1 : 0) : 0,
-                Mathf.Abs(desiredRotationDegrees.y - currentRotationDegrees.y) < _aiController.DistanceAndHeightThreshold ? (desiredRotationDegrees.y > currentRotationDegrees.y ? 1 : 0) : 0,
-                Mathf.Abs(desiredRotationDegrees.z - currentRotationDegrees.z) < _aiController.DistanceAndHeightThreshold ? (desiredRotationDegrees.z > currentRotationDegrees.z ? 1 : 0) : 0
+                Mathf.Abs(desiredRotationDegrees.x - currentRotationDegrees.x) > _aiController.DistanceAndHeightThreshold ? (desiredRotationDegrees.x > currentRotationDegrees.x ? 1 : -1) : 0,
+                Mathf.Abs(desiredRotationDegrees.y - currentRotationDegrees.y) > _aiController.DistanceAndHeightThreshold ? (desiredRotationDegrees.y > currentRotationDegrees.y ? 1 : -1) : 0,
+                Mathf.Abs(desiredRotationDegrees.z - currentRotationDegrees.z) > _aiController.DistanceAndHeightThreshold ? (desiredRotationDegrees.z > currentRotationDegrees.z ? 1 : -1) : 0
             );
 
             return _controlledEntity.DesiredBodyRotation.magnitude == 0;
