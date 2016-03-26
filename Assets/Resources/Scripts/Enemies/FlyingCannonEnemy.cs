@@ -13,20 +13,24 @@ public class FlyingCannonEnemy : MonoBehaviour {
     
 
     [Header("Movement")]
-    [SerializeField] float MaximumSpeed = 60f;
-    [SerializeField] float BodyTurnRate = 5f;
+    [SerializeField] public float MaximumSpeed = 60f;
+    [SerializeField] public float BodyTurnRate = 5f;
 
     [Header("Aiming")]
     [SerializeField] public Transform Cannon;
-    [SerializeField] float MaxCannonAngle = 30f;
-    [SerializeField] float CannonTurnRate = 0.25f;
+    [SerializeField] public float MaxCannonAngle = 30f;
+    [SerializeField] public float CannonTurnRate = 0.25f;
 
     [Header("Combat")]
     [SerializeField] GameObject ProjectilePrefab;
     [SerializeField] float InitialProjectileForce = 30f;
     [SerializeField] float FiringCooldown = 3f;
 
-    private float _currentCooldown = 0f;
+    public float CurrentCooldown
+    {
+        get;
+        private set;
+    }
 
     public Vector3 DesiredMovement
     {
@@ -52,11 +56,20 @@ public class FlyingCannonEnemy : MonoBehaviour {
         set;
     }
 
+    public void ResetInputs()
+    {
+        DesiredMovement = new Vector3(0,0,0);
+        DesiredBodyRotation = new Vector3(0,0,0);
+        DesiredCannonRotation = new Vector2(0,0);
+        Firing = false;
+    }
+
 	// Use this for initialization
 	void Start () {
         RigidBody = GetComponent<Rigidbody>();
         Cannon = GetComponentsInChildren<Transform>().FirstOrDefault(t => t.name == "Cannon");
-	}
+        CurrentCooldown = 0f;
+    }
 	
 	// Update is called once per frame
 	void Update () {
@@ -76,12 +89,7 @@ public class FlyingCannonEnemy : MonoBehaviour {
             rotationChange = rotationChange > 0 ? CannonTurnRate : -CannonTurnRate;
         }
 
-        if (rotateOnX)
-        {
-            rotationChange *= -1;
-        }
-
-        float currentAngle = rotateOnX ? Cannon.rotation.eulerAngles.x : (Cannon.rotation.eulerAngles.y - 180);
+        float currentAngle = rotateOnX ? Cannon.localRotation.eulerAngles.x : (Cannon.localRotation.eulerAngles.y - 180);
 
         if (currentAngle > 180)
         {
@@ -90,11 +98,11 @@ public class FlyingCannonEnemy : MonoBehaviour {
 
         if (Mathf.Abs(currentAngle + rotationChange) > MaxCannonAngle)
         {
-            rotationChange = currentAngle > 0 ? MaxCannonAngle - currentAngle : -(MaxCannonAngle + currentAngle);
+            rotationChange = 0;// currentAngle > 0 ? MaxCannonAngle - currentAngle : -(MaxCannonAngle + currentAngle);
         }
 
         Vector3 rotation = new Vector3(rotateOnX ? rotationChange : 0, rotateOnX ? 0 : rotationChange);
-        Cannon.Rotate(rotation);
+        Cannon.Rotate(rotation ,Space.Self);
     }
 
     float CapSpeed(float rawInput, float currentVelocity)
@@ -123,12 +131,12 @@ public class FlyingCannonEnemy : MonoBehaviour {
 
     void FireCannon()
     {
-        if (_currentCooldown > 0)
+        if (CurrentCooldown > 0)
         {
             return;
         }
 
-        _currentCooldown = FiringCooldown;
+        CurrentCooldown = FiringCooldown;
         GameObject projectile = Instantiate(ProjectilePrefab);
         projectile.transform.position = Cannon.position + Cannon.forward * 1.7f;
         projectile.transform.rotation = Cannon.rotation;
@@ -141,9 +149,9 @@ public class FlyingCannonEnemy : MonoBehaviour {
 
     void FixedUpdate()
     {
-        if (_currentCooldown > 0)
+        if (CurrentCooldown > 0)
         {
-            _currentCooldown -= Time.fixedDeltaTime;
+            CurrentCooldown -= Time.fixedDeltaTime;
         }
 
         /*

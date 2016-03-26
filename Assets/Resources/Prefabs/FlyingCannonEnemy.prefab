@@ -371,7 +371,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d3f4c0d8e7e5e3d4a8114e3b99a2daf1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ControlledEntity: {fileID: 11478226}
+  ControlledEnemy: {fileID: 11478226}
   Target: {fileID: 0}
   MaxDistance: 50
   MinDistance: 10

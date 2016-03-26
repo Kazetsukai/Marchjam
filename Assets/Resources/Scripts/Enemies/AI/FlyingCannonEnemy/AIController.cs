@@ -5,9 +5,9 @@ using System;
 
 namespace AIFlyingCannonEnemy
 {
-    public class AIController : MonoBehaviour
+    public class AIController : AIControllerBase<FlyingCannonEnemy>
     {
-        [SerializeField] public FlyingCannonEnemy ControlledEntity;
+        [SerializeField] FlyingCannonEnemy ControlledEnemy;
         [SerializeField] public GameObject Target;
         [SerializeField] public float MaxDistance;
         [SerializeField] public float MinDistance;
@@ -15,7 +15,27 @@ namespace AIFlyingCannonEnemy
         [SerializeField] public float MinHeight;
         [SerializeField] public float DistanceAndHeightThreshold;
 
-        public AIStateBase<AIController> CurrentState;
+        AIStateBase<AIController, FlyingCannonEnemy> _currentState;
+        public AIStateBase<AIController, FlyingCannonEnemy> CurrentState
+        {
+            get
+            {
+                return _currentState;
+            }
+            set
+            {
+                _currentState = value;
+                ControlledEnemy.ResetInputs();
+            }
+        }
+
+        public override FlyingCannonEnemy ControlledEntity
+        {
+            get
+            {
+                return ControlledEnemy;
+            }
+        }
 
         // Use this for initialization
         void Start()
@@ -33,7 +53,7 @@ namespace AIFlyingCannonEnemy
         {
             if (CurrentState != null)
             {
-                CurrentState.OnFixedUpdate();
+                CurrentState.TriggerFixedUpdate();
             }
         }
     }

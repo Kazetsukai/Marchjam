@@ -6,88 +6,40 @@ using UnityEngine;
 
 namespace AIFlyingCannonEnemy
 {
-    class HuntingState : AIStateBase<AIController>
+    class HuntingState : AIStateBase<AIController, FlyingCannonEnemy>
     {
-        Vector3 _targetLocation;
-        bool _updateTargetLocation = true;
-
         float _desiredDistance;
-        bool _updateDesiredDistance = true;
-
         float _desiredHeight;
-        bool _updateDesiredHeight = true;
 
         Vector3 _targetHeading;
         float _targetDistance;
-        Vector3 _targetDirection;
-
-        Dictionary<Func<bool>, bool> _frameResults;
-
-        FlyingCannonEnemy _controlledEntity
-        {
-            get
-            {
-                return _aiController.ControlledEntity;
-            }
-        }
+        Vector3 _targetDirection;    
 
         public HuntingState(AIController aiController)
             : base(aiController)
         {
-            _frameResults = new Dictionary<Func<bool>, bool>()
+            _frameMethods = new Dictionary<Func<bool>, bool>()
             {
                 { LookAtTarget, false },
                 { MoveTowardTarget, false },
                 { MoveToCorrectHeight, false }
             };
+            _desiredDistance = UnityEngine.Random.Range(_aiController.MinDistance, _aiController.MaxDistance);
+            _desiredHeight = UnityEngine.Random.Range(_aiController.MinHeight, _aiController.MaxHeight);
         }
 
-        public override void OnFixedUpdate()
-        {
-            foreach (var key in _frameResults.Keys.ToList())
-            {
-                _frameResults[key] = false;
-            }
-
-            bool targetLocationUpdated = false;
-            if (_updateTargetLocation)
-            {
-                _updateTargetLocation = false;
-                _targetLocation = _aiController.Target.transform.position;
-                targetLocationUpdated = true;
-            }
-
-            if (_updateDesiredDistance)
-            {
-                _updateDesiredDistance = false;
-                _desiredDistance = UnityEngine.Random.Range(_aiController.MinDistance, _aiController.MaxDistance);
-            }
-
-            if (_updateDesiredHeight)
-            {
-                _updateDesiredDistance = false;
-                _desiredHeight = UnityEngine.Random.Range(_aiController.MinHeight, _aiController.MaxHeight);
-            }
-
-            _targetHeading = _targetLocation - _controlledEntity.RigidBody.position;
+        protected override void OnFixedUpdate()
+        {           
+            _targetHeading = _aiController.Target.transform.position - _controlledEntity.RigidBody.position;
             _targetDistance = _targetHeading.magnitude;
             _targetDirection = _targetHeading / _targetDistance;
 
-            foreach (var key in _frameResults.Keys.ToList())
-            {
-                _frameResults[key] = key();
-            }
+            ExecuteFrameMethods();
 
-            if (_frameResults.All(r => r.Value))
+            if (_frameMethods[MoveTowardTarget])
             {
-                if (targetLocationUpdated)
-                {
-                    _aiController.CurrentState = null;
-                }
-                else
-                {
-                    _updateTargetLocation = true;
-                }
+                _aiController.CurrentState = new CombatState(_aiController);
+                return;
             }
         }
 
