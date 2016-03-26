@@ -11,6 +11,7 @@ public class TurretController : MonoBehaviour
 	private Transform _transform;
 	private Transform _car;
 	private Transform _barrel;
+	private Transform _bulletStartPoint;
 	private float damping = 100f;
 	private float initialBulletForce = 40f;
 	private float cooldown = 0f;
@@ -21,6 +22,7 @@ public class TurretController : MonoBehaviour
 		_transform = GetComponent<Transform>();
 		_car = _transform.parent;
 		_barrel = _transform.FindChild("barrel");
+		_bulletStartPoint = _barrel.FindChild("bullet_start");
 	}
 
 	// Update is called once per frame
@@ -51,8 +53,8 @@ public class TurretController : MonoBehaviour
 		var x = lookDir.magnitude; // target x
 		var y = lookY; // target y
 		var s = (v * v * v * v) - g * (g * (x * x) + 2 * y * (v * v)); //substitution
-		var o1 = Mathf.Atan(((v * v) + Mathf.Sqrt(s)) / (g * x)) * Mathf.Rad2Deg; // launch angle
-		var o2 = Mathf.Atan(((v * v) - Mathf.Sqrt(s)) / (g * x)) * Mathf.Rad2Deg; // launch angle
+		var o1 = Mathf.Atan(((v * v) + Mathf.Sqrt(s)) / (g * x)) * Mathf.Rad2Deg; // high launch angle
+		var o2 = Mathf.Atan(((v * v) - Mathf.Sqrt(s)) / (g * x)) * Mathf.Rad2Deg; // low launch angle
 
 		Debug.DrawRay(_barrel.position, Quaternion.AngleAxis(o2, Vector3.Cross(lookNorm, Vector3.up).normalized) * lookNorm * 5, Color.green);
 		Debug.DrawRay(_barrel.position, Quaternion.AngleAxis(o1, Vector3.Cross(lookNorm, Vector3.up).normalized) * lookNorm * 5, Color.cyan);
@@ -96,18 +98,15 @@ public class TurretController : MonoBehaviour
 
 		print(Quaternion.Angle(lift, Quaternion.identity));
 		_barrel.localRotation = Quaternion.RotateTowards(_barrel.localRotation, lift, Time.deltaTime * damping);
-
-
-
-
+		
 		var mousedown = Input.GetAxis("Fire1");
 
 		if (mousedown > 0f && cooldown <= 0f)
 		{
 			var newBullet = GameObject.Instantiate(projectilePrefab);
-			newBullet.transform.position = _barrel.position;
-			newBullet.transform.rotation = _barrel.rotation;
-			newBullet.GetComponent<Rigidbody>().AddForce(_barrel.forward * initialBulletForce, ForceMode.Impulse);
+			newBullet.transform.position = _bulletStartPoint.position;
+			newBullet.transform.rotation = _bulletStartPoint.rotation;
+			newBullet.GetComponent<Rigidbody>().AddForce(_bulletStartPoint.forward * initialBulletForce, ForceMode.Impulse);
 			print("bang!");
 
 			cooldown = 1f;
