@@ -33,8 +33,15 @@ public class Vehicle : NetworkBehaviour
     [Header("Rockets")]
     [SerializeField] float RearRocketForce = 20f;
     [SerializeField] ParticleSystem RearRocketParticles;
+    [SerializeField] Light RocketLight;
+    [SerializeField] float RocketLightIntensity;
+    [SerializeField] float RocketLightTurnOnDuration = 0.2f;
 
     [SyncVar(hook ="UpdateStateFromServer")] State _state;
+
+    bool rocketActivated;
+    float rocketActiveElapsed;
+    float rocketLightLerpT;
 
     public Rigidbody rb;
     float jumpCooldownElapsed;
@@ -56,6 +63,8 @@ public class Vehicle : NetworkBehaviour
         var state = GetCurrentState();
 
         if (isServer) SetStateForClients(state);
+
+        UpdateEffects();
     }
 
     void FixedUpdate()
@@ -186,6 +195,24 @@ public class Vehicle : NetworkBehaviour
             }
             rb.AddRelativeTorque(-PitchTorque * _state.Inputs.Pitch, 0, 0, ForceMode.Force);
         }
+    }
+
+    void UpdateEffects()
+    {
+        RearRocketParticles.enableEmission = rocketActivated;
+
+        //Update rocket light (UGLY CODE. will improve later)
+        if (RocketLight != null && rocketActivated)
+        {
+            rocketActiveElapsed = Mathf.Clamp(rocketActiveElapsed + Time.deltaTime, 0, RocketLightTurnOnDuration);
+        }
+        else
+        {
+            rocketActiveElapsed = Mathf.Clamp(rocketActiveElapsed - Time.deltaTime, 0, RocketLightTurnOnDuration);
+        }
+
+        Debug.Log(rocketActiveElapsed);
+        RocketLight.intensity = (rocketActiveElapsed / RocketLightTurnOnDuration) * RocketLightIntensity;
     }
 
     private void SendInputsToServer()
