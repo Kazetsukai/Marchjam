@@ -12,5 +12,10 @@ public static class NetworkUtils
     {
         return Quaternion.Angle(me, other) > 1;
     }
+
+    public static Quaternion RotationBetween(this Quaternion me, Quaternion other)
+    {
+        return other * Quaternion.Inverse(me);
+    }
 }
 

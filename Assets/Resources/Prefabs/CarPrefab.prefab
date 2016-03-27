@@ -1172,6 +1172,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   projectilePrefab: {fileID: 180174, guid: 5b14d9d1df752444491b22564ddcc023, type: 2}
+  maxTurretRotation: 180
+  maxBarrelLift: 45
+  maxBarrelDrop: 15
+  damping: 100
+  initialBulletForce: 40
+  cooldown: 0
   cursorPosition: {x: 0, y: 0, z: 0}
 --- !u!114 &11447208
 MonoBehaviour:
@@ -1369,6 +1375,9 @@ MonoBehaviour:
   Wheel_BL: {fileID: 11401400}
   RearRocketForce: 20
   RearRocketParticles: {fileID: 19837954}
+  RocketLight: {fileID: 0}
+  RocketLightIntensity: 0
+  RocketLightTurnOnDuration: 0.2
   rb: {fileID: 5438968}
 --- !u!124 &12419384
 Behaviour:

@@ -106,7 +106,7 @@ public class TurretController : MonoBehaviour
 		float timeDelta = 1.0f / 20f;
 		Vector3 gravity = new Vector3(0, -9.8f, 0);
 
-		Vector3 position = _bulletStartPoint.position;
+        Vector3 position = _barrel.position;// _bulletStartPoint.position;
 		Vector3 velocity = _barrel.forward * initialBulletForce;
 		for (int i = 0; i < numSteps; ++i)
 		{

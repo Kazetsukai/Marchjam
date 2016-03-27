@@ -2,42 +2,70 @@
 using System.Collections;
 using UnityEngine.Networking;
 using System;
+using System.Linq;
 using UnityStandardAssets.Cameras;
+using System.Collections.Generic;
 
 public class Vehicle : NetworkBehaviour
 {
     [Header("Ground Movement")]
-    [SerializeField] float DriveForce = 100f;
-    [SerializeField] float MaxGroundSpeed = 40f;
-    [SerializeField] float MaxSteeringAngle = 35f;
-    [SerializeField] AnimationCurve SpeedVsSteeringFactor;          //Defines how much steering ability is decreased as speed increases
-    [SerializeField] AnimationCurve SpeedVsDownforce;
-    [SerializeField] bool UseDownforce = true;
-    [SerializeField] bool RWD = true;
-    [SerializeField] bool FWD = true;
-    [SerializeField] Transform CenterOfMass;
+    [SerializeField]
+    float DriveForce = 100f;
+    [SerializeField]
+    float MaxGroundSpeed = 40f;
+    [SerializeField]
+    float MaxSteeringAngle = 35f;
+    [SerializeField]
+    AnimationCurve SpeedVsSteeringFactor;          //Defines how much steering ability is decreased as speed increases
+    [SerializeField]
+    AnimationCurve SpeedVsDownforce;
+    [SerializeField]
+    bool UseDownforce = true;
+    [SerializeField]
+    bool RWD = true;
+    [SerializeField]
+    bool FWD = true;
+    [SerializeField]
+    Transform CenterOfMass;
 
-    [Header("Air Movement")]    
-    [SerializeField] float JumpForce = 200f;
-    [SerializeField] float JumpCooldownTime = 0.5f;
-    [SerializeField] float PitchTorque = 10f;
-    [SerializeField] float YawTorque = 10f;
-    [SerializeField] float RollTorque = 10f;
+    [Header("Air Movement")]
+    [SerializeField]
+    float JumpForce = 200f;
+    [SerializeField]
+    float JumpCooldownTime = 0.5f;
+    [SerializeField]
+    float PitchTorque = 10f;
+    [SerializeField]
+    float YawTorque = 10f;
+    [SerializeField]
+    float RollTorque = 10f;
 
     [Header("Wheels")]
-    [SerializeField] VehicleWheel Wheel_FR;
-    [SerializeField] VehicleWheel Wheel_FL;
-    [SerializeField] VehicleWheel Wheel_BR;
-    [SerializeField] VehicleWheel Wheel_BL;
+    [SerializeField]
+    VehicleWheel Wheel_FR;
+    [SerializeField]
+    VehicleWheel Wheel_FL;
+    [SerializeField]
+    VehicleWheel Wheel_BR;
+    [SerializeField]
+    VehicleWheel Wheel_BL;
 
     [Header("Rockets")]
-    [SerializeField] float RearRocketForce = 20f;
-    [SerializeField] ParticleSystem RearRocketParticles;
-    [SerializeField] Light RocketLight;
-    [SerializeField] float RocketLightIntensity;
-    [SerializeField] float RocketLightTurnOnDuration = 0.2f;
+    [SerializeField]
+    float RearRocketForce = 20f;
+    [SerializeField]
+    ParticleSystem RearRocketParticles;
+    [SerializeField]
+    Light RocketLight;
+    [SerializeField]
+    float RocketLightIntensity;
+    [SerializeField]
+    float RocketLightTurnOnDuration = 0.2f;
 
-    [SyncVar(hook ="UpdateStateFromServer")] State _state;
+    [SyncVar(hook = "UpdateStateFromServer")]
+    State _state;
+
+    Queue<State> _predictedStates = new Queue<State>();
 
     bool rocketActivated;
     float rocketActiveElapsed;
@@ -45,8 +73,10 @@ public class Vehicle : NetworkBehaviour
 
     public Rigidbody rb;
     float jumpCooldownElapsed;
+    private int _nextInputNumber;
+    private Vector3 _diffP;
 
-	void Start ()
+    void Start()
     {
         rb = GetComponent<Rigidbody>();
 
@@ -54,24 +84,27 @@ public class Vehicle : NetworkBehaviour
         {
             FindObjectOfType<AutoCam>().SetTarget(gameObject.transform);
         }
-	}
+    }
+
+    void Awake()
+    {
+        rb.Sleep();
+    }
 
     void Update()
     {
-        SendInputsToServer();
 
-        var state = GetCurrentState();
-
-        if (isServer) SetStateForClients(state);
-
-        UpdateEffects();
+        //UpdateEffects();
     }
 
     void FixedUpdate()
     {
-        
-        UpdatePhysics();
+        SendInputsToServer();
 
+        if (isServer) SetStateForClients(GetCurrentState());
+
+        UpdatePhysics();
+        
     }
 
     private State GetCurrentState()
@@ -89,25 +122,41 @@ public class Vehicle : NetworkBehaviour
     private void SetStateForClients(State state)
     {
         // Set the _state which will go to each client
-        _state = state;
+        //_state = state;
     }
-    
+
     private void UpdateStateFromServer(State newState)
     {
-            // Store the newly received state.
-            _state = newState;
+        if (isLocalPlayer)
+            Debug.Log("Update from server - " + newState.Inputs.InputNumber);
+
         if (!isServer)
         {
-            rb.MovePosition(_state.Position);
-            rb.MoveRotation(_state.Rotation);
-            rb.velocity = _state.Velocity;
+            // Throw out stale states
+            while (_predictedStates.Any() && _predictedStates.Peek().Inputs.InputNumber < newState.Inputs.InputNumber)
+                _predictedStates.Dequeue();
+
+            // Calculate predicted current state based on authoritative server state and predicted state
+            if (_predictedStates.Any())
+            {
+                var first = _predictedStates.Peek();
+                var last = _predictedStates.Last();
+                var diffPosition = newState.Position - first.Position;
+                var diffRotation = first.Rotation.RotationBetween(newState.Rotation);
+                var diffVelocity = newState.Velocity - first.Velocity;
+                var diffAngularVelocity = newState.AngularVelocity - first.AngularVelocity;
+
+                //if (diffPosition.magnitude < 2) diffPosition = Vector3.zero;
+
+                //Debug.Log(newState.Position + " " + first.Position + "   -  " + (newState.Position - first.Position));
+                //Debug.Log(newState.AngularVelocity + " " + first.AngularVelocity + "   -  " + (diffAngularVelocity));
+
+                rb.position += diffPosition;
+                rb.rotation = diffRotation * rb.rotation;
+                rb.velocity += diffVelocity;
+                rb.angularVelocity += diffAngularVelocity;
+            }
         }
-            //rb.angularVelocity = _state.AngularVelocity;
-            // Apply it locally but only if it is different enough from prediction.
-            //if (rb.position.IsDifferentEnoughTo(_state.Position)) rb.position = _state.Position;
-            //if (rb.rotation.IsDifferentEnoughTo(_state.Rotation)) rb.rotation = _state.Rotation;
-            //if (rb.velocity.IsDifferentEnoughTo(_state.Velocity)) rb.velocity = _state.Velocity;
-            //if (rb.angularVelocity.IsDifferentEnoughTo(_state.AngularVelocity)) rb.angularVelocity = _state.AngularVelocity;
     }
 
     private void UpdatePhysics()
@@ -221,6 +270,7 @@ public class Vehicle : NetworkBehaviour
         {
             var input = new Inputs()
             {
+                InputNumber = _nextInputNumber++,
                 Throttle = Input.GetAxis("Vertical"),
                 Steering = Input.GetAxis("Horizontal"),
                 Jump = Input.GetAxis("Jump"),
@@ -229,8 +279,14 @@ public class Vehicle : NetworkBehaviour
                 Horizontal = Input.GetAxis("Horizontal"),
                 Pitch = Input.GetAxis("Pitch")
             };
-            
+
+            // Locally apply for client prediction
+            _state.Inputs = input;
+            _state = GetCurrentState();
+            _predictedStates.Enqueue(_state);
+
             // Send to server
+            Debug.Log("Sending to server - " + input.InputNumber);
             CmdSetInputs(input);
         }
     }
@@ -238,7 +294,7 @@ public class Vehicle : NetworkBehaviour
     [Command]
     private void CmdSetInputs(Inputs inputs)
     {
-        _state = new State(_state) { Inputs = inputs };
+        _state = new State(GetCurrentState()) { Inputs = inputs };
     }
 
 
@@ -246,15 +302,13 @@ public class Vehicle : NetworkBehaviour
     {
         public State(State oldState)
         {
-            TimeStamp = Time.unscaledTime;
             Inputs = oldState.Inputs;
             Position = oldState.Position;
             Rotation = oldState.Rotation;
             Velocity = oldState.Velocity;
-            AngularVelocity = oldState.Velocity;
+            AngularVelocity = oldState.AngularVelocity;
         }
-
-        public float TimeStamp;
+        
         public Inputs Inputs;
         public Vector3 Position;
         public Quaternion Rotation;
@@ -264,6 +318,7 @@ public class Vehicle : NetworkBehaviour
 
     struct Inputs
     {
+        public long InputNumber;
         public float Handbrake;
         public float Horizontal;
         public float Jump;
