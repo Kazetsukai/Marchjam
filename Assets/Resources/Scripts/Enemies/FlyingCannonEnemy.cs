@@ -92,7 +92,7 @@ public class FlyingCannonEnemy : EnemyBase {
             rotationChange = rotationChange > 0 ? CannonTurnRate : -CannonTurnRate;
         }
 
-        float currentAngle = rotateOnX ? Cannon.localRotation.eulerAngles.x : (Cannon.localRotation.eulerAngles.y - 180);
+        float currentAngle = rotateOnX ? Cannon.localRotation.eulerAngles.x : (Cannon.localRotation.eulerAngles.y);
 
         if (currentAngle > 180)
         {
@@ -128,6 +128,10 @@ public class FlyingCannonEnemy : EnemyBase {
         }
 
         targetSpeed -= absVelocity;
+        if (targetSpeed < 0)
+        {
+            targetSpeed = 0;
+        }
 
         return rawInput > 0 ? targetSpeed : -targetSpeed;
     }
@@ -192,6 +196,7 @@ public class FlyingCannonEnemy : EnemyBase {
 
 				_rigidBody.AddRelativeForce(actualMovement, ForceMode.Acceleration);
             }
+            
 
             /*
             //Temporarily get rotation from user input

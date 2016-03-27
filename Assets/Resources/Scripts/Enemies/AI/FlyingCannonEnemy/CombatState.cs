@@ -56,7 +56,6 @@ namespace AIFlyingCannonEnemy
 
             if (ExecuteFrameMethods())
             {
-                SetNewStrafeDirection();
                 _controlledEntity.Firing = true;
             }
             else
@@ -69,16 +68,17 @@ namespace AIFlyingCannonEnemy
                 _controlledEntity.DesiredMovement = new Vector3
                 (
                     _strafeDirection.x,
-                    _strafeDirection.y,
+                    _controlledEntity.DesiredMovement.y,
                     _controlledEntity.DesiredMovement.z
                 );
             }
             else
             {
+                SetNewStrafeDirection();
                 _controlledEntity.DesiredMovement = new Vector3
                 (
                     0,
-                    0,
+                    _controlledEntity.DesiredMovement.y,
                     _controlledEntity.DesiredMovement.z
                 );
             }
@@ -88,36 +88,29 @@ namespace AIFlyingCannonEnemy
         {
             _strafeDirection = new Vector3
             (
-                UnityEngine.Random.Range(0.1f, 0.2f) * UnityEngine.Random.Range(0, 1f) > 0.5f ? 1 : -1,
-                UnityEngine.Random.Range(0f, 0.05f)
+                1 * UnityEngine.Random.Range(0, 1f) > 0.5f ? 1 : -1,
+                0
             );
         }
 
         bool AimBodyAtTarget()
         {
-            Quaternion desiredRotation = Quaternion.LookRotation(_targetDirection);
-            Vector3 desiredRotationDegrees = new Vector3
+            Quaternion desiredRotation = Quaternion.LookRotation(_targetDirection, Vector3.up);
+            Vector3 desiredRotationDegreesDelta = new Vector3
             (
-                desiredRotation.eulerAngles.x - (desiredRotation.eulerAngles.x > 180 ? 360 : 0),
-                desiredRotation.eulerAngles.y - (desiredRotation.eulerAngles.y > 180 ? 360 : 0),
-                desiredRotation.eulerAngles.z - (desiredRotation.eulerAngles.z > 180 ? 360 : 0)
-            );
-
-            Vector3 currentRotationDegrees = new Vector3
-            (
-                _controlledEntity._rigidBody.rotation.eulerAngles.x - (_controlledEntity._rigidBody.rotation.eulerAngles.x > 180 ? 360 : 0),
-                _controlledEntity._rigidBody.rotation.eulerAngles.y - (_controlledEntity._rigidBody.rotation.eulerAngles.y > 180 ? 360 : 0),
-                _controlledEntity._rigidBody.rotation.eulerAngles.z - (_controlledEntity._rigidBody.rotation.eulerAngles.z > 180 ? 360 : 0)
+                Mathf.DeltaAngle(_controlledEntity._rigidBody.rotation.eulerAngles.x, desiredRotation.eulerAngles.x),
+                Mathf.DeltaAngle(_controlledEntity._rigidBody.rotation.eulerAngles.y, desiredRotation.eulerAngles.y),
+                Mathf.DeltaAngle(_controlledEntity._rigidBody.rotation.eulerAngles.z, desiredRotation.eulerAngles.z)
             );
 
             _controlledEntity.DesiredBodyRotation = new Vector3
             (
-                Mathf.Abs(desiredRotationDegrees.x - currentRotationDegrees.x) > _controlledEntity.MaxCannonAngle ? (desiredRotationDegrees.x > currentRotationDegrees.x ? 1 : -1) : 0,
-                Mathf.Abs(desiredRotationDegrees.y - currentRotationDegrees.y) > _controlledEntity.MaxCannonAngle ? (desiredRotationDegrees.y > currentRotationDegrees.y ? 1 : -1) : 0,
-                Mathf.Abs(desiredRotationDegrees.z - currentRotationDegrees.z) > _controlledEntity.MaxCannonAngle ? (desiredRotationDegrees.z > currentRotationDegrees.z ? 1 : -1) : 0
+                Mathf.Abs(desiredRotationDegreesDelta.x) > _aiController.DistanceAndHeightThreshold ? desiredRotationDegreesDelta.x / Mathf.Abs(desiredRotationDegreesDelta.x) : 0,
+                Mathf.Abs(desiredRotationDegreesDelta.y) > _aiController.DistanceAndHeightThreshold ? desiredRotationDegreesDelta.y / Mathf.Abs(desiredRotationDegreesDelta.y) : 0,
+                Mathf.Abs(desiredRotationDegreesDelta.z) > _aiController.DistanceAndHeightThreshold ? desiredRotationDegreesDelta.z / Mathf.Abs(desiredRotationDegreesDelta.z) : 0
             );
 
-            return _controlledEntity.DesiredBodyRotation.magnitude == 0;
+            return _controlledEntity.DesiredBodyRotation.magnitude <= _controlledEntity.MaxCannonAngle;
         }
 
         bool AimCannonAtTarget()
@@ -126,26 +119,20 @@ namespace AIFlyingCannonEnemy
             float targetDistanceFromCannon = targetHeadingFromCannon.magnitude;
             Vector3 targetDirectionFromCannon = targetHeadingFromCannon / targetDistanceFromCannon;
 
-            Quaternion desiredRotation = Quaternion.LookRotation(targetDirectionFromCannon);
-            Vector2 desiredRotationDegrees = new Vector3
+            Quaternion desiredRotation = Quaternion.LookRotation(targetDirectionFromCannon, Vector3.up);
+            Vector2 desiredRotationDegreesDelta = new Vector2
             (
-                desiredRotation.eulerAngles.x - (desiredRotation.eulerAngles.x > 180 ? 360 : 0),
-                desiredRotation.eulerAngles.y - (desiredRotation.eulerAngles.y > 180 ? 360 : 0)
+                Mathf.DeltaAngle(_controlledEntity.Cannon.rotation.eulerAngles.x, desiredRotation.eulerAngles.x), 
+                Mathf.DeltaAngle(_controlledEntity.Cannon.rotation.eulerAngles.y, desiredRotation.eulerAngles.y)
             );
 
-            Vector2 currentRotationDegrees = new Vector3
+            _controlledEntity.DesiredCannonRotation = new Vector2
             (
-                _controlledEntity.Cannon.rotation.eulerAngles.x - (_controlledEntity.Cannon.rotation.eulerAngles.x > 180 ? 360 : 0),
-                _controlledEntity.Cannon.rotation.eulerAngles.y - (_controlledEntity.Cannon.rotation.eulerAngles.y > 180 ? 360 : 0)
+                Mathf.Abs(desiredRotationDegreesDelta.x) > 0 ? desiredRotationDegreesDelta.x / Mathf.Abs(desiredRotationDegreesDelta.x) : 0,
+                Mathf.Abs(desiredRotationDegreesDelta.y) > 0 ? desiredRotationDegreesDelta.y / Mathf.Abs(desiredRotationDegreesDelta.y) : 0
             );
 
-            _controlledEntity.DesiredBodyRotation = new Vector2
-            (
-                Mathf.Abs(desiredRotationDegrees.x - currentRotationDegrees.x) > 0 ? (desiredRotationDegrees.x > currentRotationDegrees.x ? 1 : -1) : 0,
-                Mathf.Abs(desiredRotationDegrees.y - currentRotationDegrees.y) > 0 ? (desiredRotationDegrees.y > currentRotationDegrees.y ? 1 : -1) : 0
-            );
-
-            return _controlledEntity.DesiredCannonRotation.magnitude == 0;
+            return _controlledEntity.DesiredCannonRotation.magnitude <= 5;
         }
     }
 }

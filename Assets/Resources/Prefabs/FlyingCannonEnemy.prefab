@@ -124,7 +124,7 @@ Transform:
   m_GameObject: {fileID: 106488}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 2, y: 1, z: 2}
+  m_LocalScale: {x: 2, y: 1.5, z: 2}
   m_Children: []
   m_Father: {fileID: 474212}
   m_RootOrder: 0
@@ -313,8 +313,8 @@ Rigidbody:
   m_GameObject: {fileID: 170434}
   serializedVersion: 2
   m_Mass: 1
-  m_Drag: 0
-  m_AngularDrag: 0
+  m_Drag: 0.1
+  m_AngularDrag: 2
   m_UseGravity: 0
   m_IsKinematic: 0
   m_Interpolate: 0
@@ -330,7 +330,7 @@ BoxCollider:
   m_IsTrigger: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_Size: {x: 2, y: 1, z: 2.1}
+  m_Size: {x: 2, y: 1.5, z: 2.2}
   m_Center: {x: 0, y: 0, z: 0.1}
 --- !u!114 &11402446
 MonoBehaviour:
@@ -345,10 +345,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ControlledEnemy: {fileID: 11478226}
   Target: {fileID: 0}
-  MaxDistance: 50
-  MinDistance: 10
-  MaxHeight: 10
-  MinHeight: 15
+  MaxDistance: 30
+  MinDistance: 15
   DistanceAndHeightThreshold: 5
 --- !u!114 &11478226
 MonoBehaviour:
@@ -363,8 +361,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Health: 100
   Dead: 0
-  MaximumSpeed: 5
-  BodyTurnRate: 1
+  MaximumSpeed: 50
+  StartSpeed: 15
+  AccelerationRate: 2
+  BodyTurnRate: 4
   Cannon: {fileID: 498286}
   MaxCannonAngle: 30
   CannonTurnRate: 0.5

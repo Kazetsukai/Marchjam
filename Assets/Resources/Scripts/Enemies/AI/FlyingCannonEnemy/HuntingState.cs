@@ -9,7 +9,6 @@ namespace AIFlyingCannonEnemy
     class HuntingState : AIStateBase<AIController, FlyingCannonEnemy>
     {
         float _desiredDistance;
-        float _desiredHeight;
 
         Vector3 _targetHeading;
         float _targetDistance;
@@ -21,15 +20,13 @@ namespace AIFlyingCannonEnemy
             _frameMethods = new Dictionary<Func<bool>, bool>()
             {
                 { LookAtTarget, false },
-                { MoveTowardTarget, false },
-                { MoveToCorrectHeight, false }
+                { MoveTowardTarget, false }
             };
-                _desiredDistance = UnityEngine.Random.Range(_aiController.MinDistance, _aiController.MaxDistance);
-            _desiredHeight = UnityEngine.Random.Range(_aiController.MinHeight, _aiController.MaxHeight);
-            }
+            _desiredDistance = UnityEngine.Random.Range(_aiController.MinDistance, _aiController.MaxDistance);
+        }
 
         protected override void OnFixedUpdate()
-            {
+        {
             _targetHeading = _aiController.Target.transform.position - _controlledEntity._rigidBody.position;
             _targetDistance = _targetHeading.magnitude;
             _targetDirection = _targetHeading / _targetDistance;
@@ -37,34 +34,27 @@ namespace AIFlyingCannonEnemy
             ExecuteFrameMethods();
 
             if (_frameMethods[MoveTowardTarget])
-                {
-                _aiController.CurrentState = new CombatState(_aiController);
-                return;
+            {
+            _aiController.CurrentState = new CombatState(_aiController);
+            return;
             }
         }
 
         bool LookAtTarget()
         {
-            Quaternion desiredRotation = Quaternion.LookRotation(_targetDirection);
-            Vector3 desiredRotationDegrees = new Vector3
+            Quaternion desiredRotation = Quaternion.LookRotation(_targetDirection, Vector3.up);
+            Vector3 desiredRotationDegreesDelta = new Vector3
             (
-                desiredRotation.eulerAngles.x - (desiredRotation.eulerAngles.x > 180 ? 360 : 0),
-                desiredRotation.eulerAngles.y - (desiredRotation.eulerAngles.y > 180 ? 360 : 0),
-                desiredRotation.eulerAngles.z - (desiredRotation.eulerAngles.z > 180 ? 360 : 0)
-            );
-
-            Vector3 currentRotationDegrees = new Vector3
-            (
-                _controlledEntity._rigidBody.rotation.eulerAngles.x - (_controlledEntity._rigidBody.rotation.eulerAngles.x > 180 ? 360 : 0),
-                _controlledEntity._rigidBody.rotation.eulerAngles.y - (_controlledEntity._rigidBody.rotation.eulerAngles.y > 180 ? 360 : 0),
-                _controlledEntity._rigidBody.rotation.eulerAngles.z - (_controlledEntity._rigidBody.rotation.eulerAngles.z > 180 ? 360 : 0)
+                Mathf.DeltaAngle(_controlledEntity._rigidBody.rotation.eulerAngles.x, desiredRotation.eulerAngles.x), 
+                Mathf.DeltaAngle(_controlledEntity._rigidBody.rotation.eulerAngles.y, desiredRotation.eulerAngles.y),
+                Mathf.DeltaAngle(_controlledEntity._rigidBody.rotation.eulerAngles.z, desiredRotation.eulerAngles.z)
             );
 
             _controlledEntity.DesiredBodyRotation = new Vector3
             (
-                Mathf.Abs(desiredRotationDegrees.x - currentRotationDegrees.x) > _aiController.DistanceAndHeightThreshold ? (desiredRotationDegrees.x > currentRotationDegrees.x ? 1 : -1) : 0,
-                Mathf.Abs(desiredRotationDegrees.y - currentRotationDegrees.y) > _aiController.DistanceAndHeightThreshold ? (desiredRotationDegrees.y > currentRotationDegrees.y ? 1 : -1) : 0,
-                Mathf.Abs(desiredRotationDegrees.z - currentRotationDegrees.z) > _aiController.DistanceAndHeightThreshold ? (desiredRotationDegrees.z > currentRotationDegrees.z ? 1 : -1) : 0
+                Mathf.Abs(desiredRotationDegreesDelta.x) > _aiController.DistanceAndHeightThreshold ? desiredRotationDegreesDelta.x / Mathf.Abs(desiredRotationDegreesDelta.x): 0,
+                Mathf.Abs(desiredRotationDegreesDelta.y) > _aiController.DistanceAndHeightThreshold ? desiredRotationDegreesDelta.y / Mathf.Abs(desiredRotationDegreesDelta.y) : 0,
+                Mathf.Abs(desiredRotationDegreesDelta.z) > _aiController.DistanceAndHeightThreshold ? desiredRotationDegreesDelta.z / Mathf.Abs(desiredRotationDegreesDelta.z) : 0
             );
 
             return _controlledEntity.DesiredBodyRotation.magnitude == 0;
@@ -72,7 +62,7 @@ namespace AIFlyingCannonEnemy
 
         bool MoveTowardTarget()
         {
-            if (Mathf.Abs(_desiredDistance - _targetDistance) < _aiController.DistanceAndHeightThreshold)
+            if (_targetDistance - _desiredDistance < _aiController.DistanceAndHeightThreshold)
             {
                 _controlledEntity.DesiredMovement = new Vector3
                 (
@@ -87,31 +77,8 @@ namespace AIFlyingCannonEnemy
             _controlledEntity.DesiredMovement = new Vector3
             (
                 localTargetDirection.x,
-                _controlledEntity.DesiredMovement.y,
+                localTargetDirection.y,
                 localTargetDirection.z
-            );
-
-            return false;
-        }
-
-        bool MoveToCorrectHeight()
-        {
-            if (Mathf.Abs(_desiredHeight - _controlledEntity._rigidBody.position.y) < _aiController.DistanceAndHeightThreshold)
-            {
-                _controlledEntity.DesiredMovement = new Vector3
-                (
-                    _controlledEntity.DesiredMovement.x,
-                    0,
-                    _controlledEntity.DesiredMovement.z
-                );
-                return true;
-            }
-
-            _controlledEntity.DesiredMovement = new Vector3
-            (
-                _controlledEntity.DesiredMovement.x,
-                (_desiredHeight - _controlledEntity._rigidBody.position.y) > 0 ? 1 : -1,
-                _controlledEntity.DesiredMovement.z
             );
 
             return false;

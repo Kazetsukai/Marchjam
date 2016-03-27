@@ -11,8 +11,6 @@ namespace AIFlyingCannonEnemy
         [SerializeField] public GameObject Target;
         [SerializeField] public float MaxDistance;
         [SerializeField] public float MinDistance;
-        [SerializeField] public float MaxHeight;
-        [SerializeField] public float MinHeight;
         [SerializeField] public float DistanceAndHeightThreshold;
 
         AIStateBase<AIController, FlyingCannonEnemy> _currentState;
@@ -25,6 +23,7 @@ namespace AIFlyingCannonEnemy
             set
             {
                 _currentState = value;
+                Debug.Log("Changed state to " + _currentState.GetType().Name);
                 ControlledEnemy.ResetInputs();
             }
         }
@@ -53,6 +52,7 @@ namespace AIFlyingCannonEnemy
         {
             if (CurrentState != null)
             {
+                ControlledEnemy.ResetInputs();
                 CurrentState.TriggerFixedUpdate();
             }
         }
