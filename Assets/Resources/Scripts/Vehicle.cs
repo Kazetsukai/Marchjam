@@ -39,6 +39,9 @@ public class Vehicle : NetworkBehaviour
 
     [SyncVar(hook ="UpdateStateFromServer")] State _state;
 
+    [Header("Misc")]
+    public bool JoeTypeCamera = false;
+
     bool rocketActivated;
     float rocketActiveElapsed;
     float rocketLightLerpT;
@@ -52,7 +55,15 @@ public class Vehicle : NetworkBehaviour
 
         if (isLocalPlayer)
         {
-            FindObjectOfType<AutoCam>().SetTarget(gameObject.transform);
+            if (JoeTypeCamera)      //Temp thing to allow use of both car types
+            {
+                FindObjectOfType<Camera_StraightLook>().Target = transform;
+                FindObjectOfType<Camera_StraightLook>().turret = GetComponentInChildren<TurretController_Straight>();
+            }
+            else
+            {
+                FindObjectOfType<AutoCam>().SetTarget(gameObject.transform);
+            }
         }
 	}
 
@@ -63,15 +74,13 @@ public class Vehicle : NetworkBehaviour
         var state = GetCurrentState();
 
         if (isServer) SetStateForClients(state);
-
+       
         UpdateEffects();
     }
 
     void FixedUpdate()
-    {
-        
+    {        
         UpdatePhysics();
-
     }
 
     private State GetCurrentState()
@@ -94,25 +103,24 @@ public class Vehicle : NetworkBehaviour
     
     private void UpdateStateFromServer(State newState)
     {
-            // Store the newly received state.
-            _state = newState;
+        // Store the newly received state.
+        _state = newState;
         if (!isServer)
         {
             rb.MovePosition(_state.Position);
             rb.MoveRotation(_state.Rotation);
             rb.velocity = _state.Velocity;
         }
-            //rb.angularVelocity = _state.AngularVelocity;
-            // Apply it locally but only if it is different enough from prediction.
-            //if (rb.position.IsDifferentEnoughTo(_state.Position)) rb.position = _state.Position;
-            //if (rb.rotation.IsDifferentEnoughTo(_state.Rotation)) rb.rotation = _state.Rotation;
-            //if (rb.velocity.IsDifferentEnoughTo(_state.Velocity)) rb.velocity = _state.Velocity;
-            //if (rb.angularVelocity.IsDifferentEnoughTo(_state.AngularVelocity)) rb.angularVelocity = _state.AngularVelocity;
+        //rb.angularVelocity = _state.AngularVelocity;
+        // Apply it locally but only if it is different enough from prediction.
+        //if (rb.position.IsDifferentEnoughTo(_state.Position)) rb.position = _state.Position;
+        //if (rb.rotation.IsDifferentEnoughTo(_state.Rotation)) rb.rotation = _state.Rotation;
+        //if (rb.velocity.IsDifferentEnoughTo(_state.Velocity)) rb.velocity = _state.Velocity;
+        //if (rb.angularVelocity.IsDifferentEnoughTo(_state.AngularVelocity)) rb.angularVelocity = _state.AngularVelocity;
     }
 
     private void UpdatePhysics()
     {
-
         //Update rigidbody centerofmass position
         rb.centerOfMass = transform.InverseTransformPoint(CenterOfMass.position);
 
@@ -155,6 +163,7 @@ public class Vehicle : NetworkBehaviour
         {
             rb.AddForce(transform.forward * RearRocketForce, ForceMode.Force);
             RearRocketParticles.enableEmission = true;
+            Debug.Log("boost");
         }
         else
         {
@@ -211,13 +220,15 @@ public class Vehicle : NetworkBehaviour
             rocketActiveElapsed = Mathf.Clamp(rocketActiveElapsed - Time.deltaTime, 0, RocketLightTurnOnDuration);
         }
 
-        Debug.Log(rocketActiveElapsed);
-        RocketLight.intensity = (rocketActiveElapsed / RocketLightTurnOnDuration) * RocketLightIntensity;
+        if (RocketLight != null)
+        {
+            RocketLight.intensity = (rocketActiveElapsed / RocketLightTurnOnDuration) * RocketLightIntensity;
+        }
     }
 
     private void SendInputsToServer()
     {
-        if (isLocalPlayer)
+        if (isLocalPlayer)       
         {
             var input = new Inputs()
             {
@@ -229,7 +240,7 @@ public class Vehicle : NetworkBehaviour
                 Horizontal = Input.GetAxis("Horizontal"),
                 Pitch = Input.GetAxis("Pitch")
             };
-            
+
             // Send to server
             CmdSetInputs(input);
         }

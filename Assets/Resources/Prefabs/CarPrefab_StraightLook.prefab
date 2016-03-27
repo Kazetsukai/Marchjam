@@ -42,7 +42,7 @@ GameObject:
   serializedVersion: 4
   m_Component:
   - 4: {fileID: 493574}
-  - 114: {fileID: 11429640}
+  - 114: {fileID: 11435154}
   m_Layer: 0
   m_Name: Camera_Mount
   m_TagString: Untagged
@@ -166,7 +166,7 @@ GameObject:
   serializedVersion: 4
   m_Component:
   - 4: {fileID: 422974}
-  - 114: {fileID: 11440752}
+  - 114: {fileID: 11464182}
   m_Layer: 0
   m_Name: Turret
   m_TagString: Untagged
@@ -275,6 +275,7 @@ GameObject:
   - 54: {fileID: 5452512}
   - 65: {fileID: 6511842}
   - 114: {fileID: 11404458}
+  - 114: {fileID: 11472500}
   m_Layer: 0
   m_Name: Car
   m_TagString: Untagged
@@ -546,7 +547,7 @@ Transform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 193292}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -3.9284964, y: 0.010284144, z: -0.31694308}
+  m_LocalPosition: {x: 0.09668625, y: -2.1469905e-18, z: 2.3492823}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 437284}
@@ -1181,8 +1182,9 @@ MonoBehaviour:
   RocketLight: {fileID: 10859190}
   RocketLightIntensity: 5
   RocketLightTurnOnDuration: 0.08
+  JoeTypeCamera: 1
   rb: {fileID: 5452512}
---- !u!114 &11429640
+--- !u!114 &11435154
 MonoBehaviour:
   m_ObjectHideFlags: 1
   m_PrefabParentObject: {fileID: 0}
@@ -1190,20 +1192,20 @@ MonoBehaviour:
   m_GameObject: {fileID: 114072}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d599aab60f57d8b4ca7c2c85caf9af44, type: 3}
+  m_Script: {fileID: 11500000, guid: 0bdfe295a196b364097b60c7d73c64e6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   camera: {fileID: 2010930}
   Target: {fileID: 437284}
-  Distance: 7
-  RotateRate: 300
-  CameraVerticalOffsetAngle: -15
+  Distance: 6
+  RotateRate: 100
+  CameraVerticalOffsetAngle: -20
   MaxVertAngle: 178
   MinVertAngle: 2
   CurrentHorizAngle: 0
   CurrentVertAngle: 0
-  turret: {fileID: 11440752}
-  updateType: 0
+  turret: {fileID: 11464182}
+  updateType: 1
   F1UnlocksCursor: 1
 --- !u!114 &11439838
 MonoBehaviour:
@@ -1243,22 +1245,6 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 0
---- !u!114 &11440752
-MonoBehaviour:
-  m_ObjectHideFlags: 1
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 100100000}
-  m_GameObject: {fileID: 158348}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 37884a04edc79674195799775e56ad2f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  ParentVehicle: {fileID: 5452512}
-  BulletPrefab: {fileID: 180174, guid: 5b14d9d1df752444491b22564ddcc023, type: 2}
-  BulletSpawnTransform: {fileID: 440726}
-  BulletForce: 5000
-  FireCooldown: 0.2
 --- !u!114 &11454788
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -1335,6 +1321,54 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 0
+--- !u!114 &11464182
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 158348}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2bc2c0f83f1fcae40824772dd99931dd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ParentVehicle: {fileID: 5452512}
+  BulletPrefab: {fileID: 180174, guid: 5b14d9d1df752444491b22564ddcc023, type: 2}
+  BulletSpawnTransform: {fileID: 440726}
+  BulletForce: 6000
+  FireCooldown: 0.5
+--- !u!114 &11472500
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 183066}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 372142912, guid: 870353891bb340e2b2a9c8707e7419ba, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_SceneId:
+    m_Value: 0
+  m_AssetId:
+    i0: 144
+    i1: 203
+    i2: 196
+    i3: 151
+    i4: 209
+    i5: 220
+    i6: 42
+    i7: 36
+    i8: 25
+    i9: 146
+    i10: 144
+    i11: 172
+    i12: 187
+    i13: 137
+    i14: 58
+    i15: 144
+  m_ServerOnly: 0
+  m_LocalPlayerAuthority: 0
 --- !u!114 &11479162
 MonoBehaviour:
   m_ObjectHideFlags: 1
