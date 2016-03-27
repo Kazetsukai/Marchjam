@@ -9,13 +9,11 @@ public class ProjectileController : MonoBehaviour
 	private float damageModifier = 25f;
 	private float explosionDist = 2f;
 
-	// Use this for initialization
 	void Start()
 	{
 		_rigidbody = GetComponent<Rigidbody>();
 	}
-
-	// Update is called once per frame
+    
 	void Update()
 	{
 
@@ -50,6 +48,6 @@ public class ProjectileController : MonoBehaviour
 			}
 		}
 		Destroy(explosion, 5f);
-		Destroy(gameObject);
+		Destroy(gameObject);        
 	}
 }
