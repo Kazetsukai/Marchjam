@@ -111,6 +111,7 @@ GameObject:
   - 54: {fileID: 5438968}
   - 65: {fileID: 6568686}
   - 114: {fileID: 11496544}
+  - 114: {fileID: 11456638}
   m_Layer: 0
   m_Name: Car
   m_TagString: Untagged
@@ -419,7 +420,7 @@ Transform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 157984}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -3.9284964, y: 0.010284144, z: -0.31694308}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 474162}
@@ -1171,6 +1172,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   projectilePrefab: {fileID: 180174, guid: 5b14d9d1df752444491b22564ddcc023, type: 2}
+  cursorPosition: {x: 0, y: 0, z: 0}
 --- !u!114 &11447208
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -1209,6 +1211,38 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 0
+--- !u!114 &11456638
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 133218}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 372142912, guid: 870353891bb340e2b2a9c8707e7419ba, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_SceneId:
+    m_Value: 0
+  m_AssetId:
+    i0: 170
+    i1: 66
+    i2: 61
+    i3: 210
+    i4: 210
+    i5: 6
+    i6: 101
+    i7: 228
+    i8: 248
+    i9: 113
+    i10: 92
+    i11: 54
+    i12: 192
+    i13: 104
+    i14: 41
+    i15: 157
+  m_ServerOnly: 0
+  m_LocalPlayerAuthority: 0
 --- !u!114 &11460072
 MonoBehaviour:
   m_ObjectHideFlags: 1
