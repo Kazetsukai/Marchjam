@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System;
+using System.Linq;
 
 namespace AIFlyingCannonEnemy
 {
@@ -11,7 +12,9 @@ namespace AIFlyingCannonEnemy
     public class AIController : AIControllerBase<FlyingCannonEnemy>
     {
         [SerializeField] FlyingCannonEnemy ControlledEnemy;
-        [SerializeField] public GameObject Target;              //should be able to find it's own target later, for now this is hardcoded
+
+        [Tooltip("The current target the FlyingCannonEnemy is pursuing")]
+        [SerializeField] public GameObject Target;
 
         [Tooltip("The maximum distance that the enemy can be from the target before engaging")]
         [SerializeField] public float MaxDistance;
@@ -63,6 +66,13 @@ namespace AIFlyingCannonEnemy
                 ControlledEnemy.ResetInputs();
                 CurrentState.TriggerFixedUpdate();
             }
+        }
+
+        //Crude way of getting nearest vehicle for now
+        public GameObject FindNearestVehicle()
+        {
+            Vehicle nearestVehicle = FindObjectsOfType<Vehicle>().OrderBy(v => Vector3.Distance(ControlledEntity.Body.position, v.transform.position)).FirstOrDefault();
+            return nearestVehicle != null ? nearestVehicle.gameObject : null;
         }
     }
 }

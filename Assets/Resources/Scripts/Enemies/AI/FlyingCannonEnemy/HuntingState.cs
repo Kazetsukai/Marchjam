@@ -26,10 +26,18 @@ namespace AIFlyingCannonEnemy
                 { MoveTowardTarget, false }
             };
             _desiredDistance = UnityEngine.Random.Range(AiController.MinDistance, AiController.MaxDistance);
+
+            AiController.Target = AiController.FindNearestVehicle();
         }
 
         protected override void OnFixedUpdate()
         {
+            if (AiController.Target == null)
+            {
+                AiController.Target = AiController.FindNearestVehicle();
+                return;
+            }
+
             //Update heading / distance / direction of target
             _targetHeading = AiController.Target.transform.position - ControlledEntity.Body.position;
             _targetDistance = _targetHeading.magnitude;

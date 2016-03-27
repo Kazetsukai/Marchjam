@@ -30,6 +30,12 @@ namespace AIFlyingCannonEnemy
 
         protected override void OnFixedUpdate()
         {
+            if (AiController.Target == null)
+            {
+                AiController.CurrentState = new HuntingState(AiController);
+                return;
+            }
+
             //Update heading / distance / direction of target
             _targetHeading = AiController.Target.transform.position - ControlledEntity.Body.position;
             _targetDistance = _targetHeading.magnitude;
