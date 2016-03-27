@@ -279,7 +279,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   TimeToLive: 30
-  Explosion: {fileID: 100010, guid: 0199e2f66c35f0a4fba422ad02558413, type: 2}
+  ExplosionPrefab: {fileID: 100010, guid: 031d08f52af1daa4f929b85221519426, type: 2}
+  DamageModifier: 50
+  ExplosionDist: 2
 --- !u!136 &13608224
 CapsuleCollider:
   m_ObjectHideFlags: 1

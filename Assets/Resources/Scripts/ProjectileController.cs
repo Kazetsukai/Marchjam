@@ -1,52 +1,27 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System;
 
-public class ProjectileController : MonoBehaviour
+public class ProjectileController : BulletController
 {
-	public float TimeToLive = 30f;
-	public GameObject Explosion;
-	private Rigidbody _rigidbody;
-	private float damageModifier = 25f;
-	private float explosionDist = 2f;
+	public GameObject ExplosionPrefab;
+	public float DamageModifier = 50f;
+	public float ExplosionDist = 2f;
 
-	void Start()
+	public override void DoDamage(Collider other)
 	{
-		_rigidbody = GetComponent<Rigidbody>();
-	}
-    
-	void Update()
-	{
-
-	}
-
-	void FixedUpdate()
-	{
-		TimeToLive -= Time.fixedDeltaTime;
-		if (TimeToLive < 0)
-		{
-			Destroy(gameObject);
-		}
-
-		var vel = _rigidbody.velocity;
-
-		transform.LookAt(transform.position + vel);
-	}
-
-	void OnTriggerEnter()
-	{
-		var explosion = (GameObject)Instantiate(Explosion, transform.position, Quaternion.identity);
-		var hits = Physics.OverlapSphere(transform.position, explosionDist);
+		var explosion = (GameObject)Instantiate(ExplosionPrefab, transform.position, Quaternion.identity);
+		var hits = Physics.OverlapSphere(transform.position, ExplosionDist);
 		foreach (var col in hits)
 		{
 			var enemy = col.GetComponentInParent<EnemyBase>();
 			if (enemy != null)
 			{
 				var dist = (transform.position - enemy.transform.position).magnitude;
-				var damage = 1/(dist + 0.5f) * damageModifier;
+				var damage = 1 / (dist + 0.5f) * DamageModifier;
 				enemy.YaGotShot(damage);
 			}
 		}
 		Destroy(explosion, 5f);
-		Destroy(gameObject);        
 	}
 }
