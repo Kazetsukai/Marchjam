@@ -38,6 +38,7 @@ public class Vehicle : NetworkBehaviour
     [SerializeField] float RocketLightTurnOnDuration = 0.2f;
 
     [SyncVar(hook ="UpdateStateFromServer")] State _state;
+    Inputs input;                                               //Store inputs here so they can be accessed later in update by other things (such as rocket particle effects). Not sure if this is the right way to do it for now? (sorry!). This allows local car rocket booster particles to work, not sure how we handle showing the rockets on other cars.
 
     [Header("Misc")]
     public bool JoeTypeCamera = false;
@@ -208,6 +209,7 @@ public class Vehicle : NetworkBehaviour
 
     void UpdateEffects()
     {
+        rocketActivated = input.RocketRear > 0 ? true : false;
         RearRocketParticles.enableEmission = rocketActivated;
 
         //Update rocket light (UGLY CODE. will improve later)
@@ -230,7 +232,7 @@ public class Vehicle : NetworkBehaviour
     {
         if (isLocalPlayer)       
         {
-            var input = new Inputs()
+            input = new Inputs()
             {
                 Throttle = Input.GetAxis("Vertical"),
                 Steering = Input.GetAxis("Horizontal"),
@@ -262,7 +264,7 @@ public class Vehicle : NetworkBehaviour
             Position = oldState.Position;
             Rotation = oldState.Rotation;
             Velocity = oldState.Velocity;
-            AngularVelocity = oldState.Velocity;
+            AngularVelocity = oldState.AngularVelocity;
         }
 
         public float TimeStamp;
