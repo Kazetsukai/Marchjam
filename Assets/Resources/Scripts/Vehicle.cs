@@ -69,7 +69,6 @@ public class Vehicle : NetworkBehaviour
     State _state;
 
     Queue<State> _predictedStates = new Queue<State>();
-    Inputs input;
 
     bool rocketActivated;
     float rocketActiveElapsed;
@@ -258,7 +257,7 @@ public class Vehicle : NetworkBehaviour
 
     void UpdateEffects()
     {
-        rocketActivated = input.RocketRear > 0 ? true : false;
+        rocketActivated = _state.Inputs.RocketRear > 0 ? true : false;
         RearRocketParticles.enableEmission = rocketActivated;
 
         //Update rocket light (UGLY CODE. will improve later)
@@ -281,7 +280,7 @@ public class Vehicle : NetworkBehaviour
     {
         if (isLocalPlayer)       
         {
-            input = new Inputs()
+            var input = new Inputs()
             {
                 InputNumber = _nextInputNumber++,
                 Throttle = Input.GetAxis("Vertical"),
