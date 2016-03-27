@@ -50,22 +50,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!1 &123952
-GameObject:
-  m_ObjectHideFlags: 1
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 100100000}
-  serializedVersion: 4
-  m_Component:
-  - 4: {fileID: 455122}
-  - 65: {fileID: 6547116}
-  m_Layer: 0
-  m_Name: Collider
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
 --- !u!1 &155432
 GameObject:
   m_ObjectHideFlags: 1
@@ -108,6 +92,7 @@ GameObject:
   - 4: {fileID: 474212}
   - 114: {fileID: 11478226}
   - 54: {fileID: 5489428}
+  - 65: {fileID: 6510626}
   m_Layer: 0
   m_Name: FlyingCannonEnemyEntity
   m_TagString: Untagged
@@ -139,10 +124,9 @@ Transform:
   m_GameObject: {fileID: 106488}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children:
-  - {fileID: 498286}
-  m_Father: {fileID: 455122}
+  m_LocalScale: {x: 2, y: 1.5, z: 2}
+  m_Children: []
+  m_Father: {fileID: 474212}
   m_RootOrder: 0
 --- !u!4 &424602
 Transform:
@@ -168,19 +152,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 480402}
   m_RootOrder: 0
---- !u!4 &455122
-Transform:
-  m_ObjectHideFlags: 1
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 100100000}
-  m_GameObject: {fileID: 123952}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children:
-  - {fileID: 415960}
-  m_Father: {fileID: 474212}
-  m_RootOrder: 0
 --- !u!4 &474212
 Transform:
   m_ObjectHideFlags: 1
@@ -188,10 +159,11 @@ Transform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 170434}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 56.791004, y: 20.42532, z: -78.09535}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
-  - {fileID: 455122}
+  - {fileID: 415960}
+  - {fileID: 498286}
   m_Father: {fileID: 480402}
   m_RootOrder: 1
 --- !u!4 &480402
@@ -201,7 +173,7 @@ Transform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 111976}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -8.141004, y: 0.6746807, z: -6.70465}
+  m_LocalPosition: {x: 31.9, y: 19.4, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 431818}
@@ -215,12 +187,12 @@ Transform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 155432}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0.2}
+  m_LocalPosition: {x: 0, y: 0, z: 0.7}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 499096}
-  m_Father: {fileID: 415960}
-  m_RootOrder: 0
+  m_Father: {fileID: 474212}
+  m_RootOrder: 1
 --- !u!4 &499096
 Transform:
   m_ObjectHideFlags: 1
@@ -341,25 +313,25 @@ Rigidbody:
   m_GameObject: {fileID: 170434}
   serializedVersion: 2
   m_Mass: 1
-  m_Drag: 1
-  m_AngularDrag: 5
+  m_Drag: 0.1
+  m_AngularDrag: 2
   m_UseGravity: 0
   m_IsKinematic: 0
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
---- !u!65 &6547116
+--- !u!65 &6510626
 BoxCollider:
   m_ObjectHideFlags: 1
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
-  m_GameObject: {fileID: 123952}
+  m_GameObject: {fileID: 170434}
   m_Material: {fileID: 0}
   m_IsTrigger: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_Size: {x: 1, y: 1, z: 2}
-  m_Center: {x: 0, y: 0, z: 0.5}
+  m_Size: {x: 2, y: 1.5, z: 2.2}
+  m_Center: {x: 0, y: 0, z: 0.1}
 --- !u!114 &11402446
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -373,10 +345,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ControlledEnemy: {fileID: 11478226}
   Target: {fileID: 0}
-  MaxDistance: 50
-  MinDistance: 10
-  MaxHeight: 10
-  MinHeight: 15
+  MaxDistance: 30
+  MinDistance: 15
   DistanceAndHeightThreshold: 5
 --- !u!114 &11478226
 MonoBehaviour:
@@ -391,8 +361,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Health: 100
   Dead: 0
-  MaximumSpeed: 60
-  BodyTurnRate: 5
+  MaximumSpeed: 50
+  StartSpeed: 15
+  AccelerationRate: 2
+  BodyTurnRate: 4
   Cannon: {fileID: 498286}
   MaxCannonAngle: 30
   CannonTurnRate: 0.5
