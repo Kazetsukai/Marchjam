@@ -104,12 +104,12 @@ public class Vehicle : NetworkBehaviour
 
     void Update()
     {
+        SendInputsToServer();
         UpdateEffects();
     }
 
     void FixedUpdate()
     {
-        SendInputsToServer();
 
         if (isServer) SetStateForClients(GetCurrentState());
 
@@ -148,22 +148,33 @@ public class Vehicle : NetworkBehaviour
             // Calculate predicted current state based on authoritative server state and predicted state
             if (_predictedStates.Any())
             {
-                var first = _predictedStates.Peek();
-                var last = _predictedStates.Last();
-                var diffPosition = newState.Position - first.Position;
-                var diffRotation = first.Rotation.RotationBetween(newState.Rotation);
-                var diffVelocity = newState.Velocity - first.Velocity;
-                var diffAngularVelocity = newState.AngularVelocity - first.AngularVelocity;
+                var pos = newState.Position;
+                var rot = newState.Rotation;
+                var vel = newState.Velocity;
+                var angVel = newState.AngularVelocity;
 
+                var lastPred = _predictedStates.First();
+                foreach (var prediction in _predictedStates)
+                {
+                    pos += lastPred.Position - prediction.Position;
+                    rot = prediction.Rotation.RotationBetween(lastPred.Rotation) * rot;
+                    vel += lastPred.Velocity - prediction.Velocity;
+                    angVel += lastPred.AngularVelocity - prediction.AngularVelocity;
+
+                    lastPred = prediction;
+                }
+
+                _predictedStates.Clear();
                 //if (diffPosition.magnitude < 2) diffPosition = Vector3.zero;
 
                 //Debug.Log(newState.Position + " " + first.Position + "   -  " + (newState.Position - first.Position));
                 //Debug.Log(newState.AngularVelocity + " " + first.AngularVelocity + "   -  " + (diffAngularVelocity));
-
-                rb.position += diffPosition;
-                rb.rotation = diffRotation * rb.rotation;
-                rb.velocity += diffVelocity;
-                rb.angularVelocity += diffAngularVelocity;
+                
+                Debug.Log(rb.position - pos);
+                rb.position = pos;
+                rb.rotation = rot;
+                rb.velocity = vel;
+                rb.angularVelocity = angVel;
             }
         }
     }
@@ -298,8 +309,11 @@ public class Vehicle : NetworkBehaviour
             _predictedStates.Enqueue(_state);
 
             // Send to server
-            Debug.Log("Sending to server - " + input.InputNumber);
-            CmdSetInputs(input);
+            if (input.InputNumber % 5 == 0)
+            {
+                Debug.Log("Sending to server - " + input.InputNumber);
+                CmdSetInputs(input);
+            }
         }
     }
 
