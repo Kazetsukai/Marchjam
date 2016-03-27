@@ -25,6 +25,7 @@ namespace AIFlyingCannonEnemy
                 { AimBodyAtTarget, false },
                 { AimCannonAtTarget, false }
             };
+            SetNewStrafeDirection();
         }
 
         protected override void OnFixedUpdate()
@@ -34,8 +35,8 @@ namespace AIFlyingCannonEnemy
             _targetDistance = _targetHeading.magnitude;
             _targetDirection = _targetHeading / _targetDistance;
 
-            //Revert to hunting state if target gets out of MaxDistance
-            if (_targetDistance > AiController.MaxDistance)
+            //Revert to hunting state if target gets out of MaxDistance and ready to fire again
+            if (_targetDistance > AiController.MaxDistance && ControlledEntity.CurrentCooldown < 0)
             {
                 AiController.CurrentState = new HuntingState(AiController);
                 return;
@@ -55,7 +56,7 @@ namespace AIFlyingCannonEnemy
             //Strafe while cannon is cooling down
             if (ControlledEntity.CurrentCooldown > 0)
             {
-                ControlledEntity.DesiredMovement.Set
+                ControlledEntity.DesiredMovement = new Vector3
                 (
                     _strafeDirection.x,
                     ControlledEntity.DesiredMovement.y,
@@ -64,13 +65,14 @@ namespace AIFlyingCannonEnemy
             }
 
 
-            if (ExecuteFrameMethods())
+            if (ExecuteFrameMethods() && _targetDistance <= AiController.MaxDistance)
             {
-                ControlledEntity.Firing = true;
-                if (ControlledEntity.CurrentCooldown == 0)
+                if (ControlledEntity.CurrentCooldown < 0)
                 {
                     SetNewStrafeDirection();
                 }
+                ControlledEntity.Firing = true;
+                
             }
             else
             {
@@ -83,7 +85,7 @@ namespace AIFlyingCannonEnemy
         /// </summary>
         void SetNewStrafeDirection()
         {
-            _strafeDirection = UnityEngine.Random.Range(0, 1f) > 0.5f ? Vector3.left : Vector3.right;
+            _strafeDirection = UnityEngine.Random.Range(0, 1f) >= 0.5f ? Vector3.left : Vector3.right;
         }
 
         /// <summary>
