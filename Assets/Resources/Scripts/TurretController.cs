@@ -1,25 +1,43 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System;
 
 public class TurretController : MonoBehaviour
 {
-	public GameObject projectilePrefab;
+	public enum WeaponType
+	{
+		Cannon,
+		Pulse
+	}
 
-	[SerializeField] float maxTurretRotation = 180f;
-	[SerializeField] float maxBarrelLift = 45f;
-	[SerializeField] float maxBarrelDrop = 15f;
+	public GameObject projectilePrefab;
+	public GameObject pulsePrefab;
+
+	[SerializeField]
+	float maxTurretRotation = 180f;
+	[SerializeField]
+	float maxBarrelLift = 45f;
+	[SerializeField]
+	float maxBarrelDrop = 15f;
 	private Transform _transform;
 	private Transform _car;
 	private Transform _barrel;
 	private Transform _bulletStartPoint;
-	[SerializeField] float damping = 100f;
-	[SerializeField] float initialBulletForce = 40f;
-	[SerializeField] float cooldown = 0f;
+	[SerializeField]
+	float damping = 100f;
+	[SerializeField]
+	float initialBulletVelocity = 40f;
+	[SerializeField]
+	float cooldown = 0f;
 	public Vector3 cursorPosition;
+	public WeaponType CurrentWeaponType;
+	private bool SwitchingWeapon;
 
 	// Use this for initialization
 	void Start()
 	{
+		CurrentWeaponType = WeaponType.Cannon;
+
 		_transform = GetComponent<Transform>();
 		_car = _transform.parent;
 		_barrel = _transform.FindChild("barrel");
@@ -34,36 +52,61 @@ public class TurretController : MonoBehaviour
 
 	void FixedUpdate()
 	{
-		var mousePos = Input.mousePosition;
-		var mouseWorldRay = Camera.main.ScreenPointToRay(mousePos);
-		RaycastHit mouseRayHitInfo;
-		var hit = Physics.Raycast(mouseWorldRay, out mouseRayHitInfo);
+		//weapons switch
+		WeaponSwitching();
 
-		var targetPos = hit ? mouseRayHitInfo.point : mouseWorldRay.GetPoint(100000);
+		var targetPos = GetTargetPosition();
 
 		var lookDir = targetPos - _barrel.position;
 
-		Debug.DrawLine(_barrel.position, _barrel.position + lookDir, Color.red);
+		Vector3 firingDirection;
+		switch (CurrentWeaponType)
+		{
+			case WeaponType.Cannon:
+				firingDirection = CalculateProjectileFiringSolution(lookDir, initialBulletVelocity);
+				break;
+			case WeaponType.Pulse:
+			default:
+				firingDirection = lookDir;
+				break;
+		}
 
+		RotateBarrelTo(firingDirection);
+
+		HandleFiring();
+	}
+
+	private void WeaponSwitching()
+	{
+		if (Input.GetAxis("WeaponSwitch") > 0)
+		{
+			if (!SwitchingWeapon)
+			{
+				CurrentWeaponType = (WeaponType)((int)(CurrentWeaponType + 1) % Enum.GetValues(typeof(WeaponType)).Length);
+				SwitchingWeapon = true;
+			}
+		}
+		else
+		{
+			SwitchingWeapon = false;
+		}
+	}
+
+	private Vector3 CalculateProjectileFiringSolution(Vector3 lookDir, float initialVelocity)
+	{
 		var lookY = lookDir.y;
 		lookDir.y = 0;
 		var lookNorm = lookDir.normalized;
 
 		var g = 9.81f; // gravity
-		var v = 40; // velocity
+		var v = initialVelocity; // velocity
 		var x = lookDir.magnitude; // target x
 		var y = lookY; // target y
 		var s = (v * v * v * v) - g * (g * (x * x) + 2 * y * (v * v)); //substitution
 		var o1 = Mathf.Atan(((v * v) + Mathf.Sqrt(s)) / (g * x)) * Mathf.Rad2Deg; // high launch angle
 		var o2 = Mathf.Atan(((v * v) - Mathf.Sqrt(s)) / (g * x)) * Mathf.Rad2Deg; // low launch angle
 
-		Debug.DrawRay(_barrel.position, Quaternion.AngleAxis(o2, Vector3.Cross(lookNorm, Vector3.up).normalized) * lookNorm * 5, Color.green);
-		Debug.DrawRay(_barrel.position, Quaternion.AngleAxis(o1, Vector3.Cross(lookNorm, Vector3.up).normalized) * lookNorm * 5, Color.cyan);
-		Debug.DrawLine(_barrel.position, _barrel.position + lookDir, Color.yellow);
-		Debug.DrawLine(_barrel.position + lookDir, _barrel.position + lookDir + new Vector3(0, lookY, 0), Color.magenta);
-
-
-		Vector3 firingDir = targetPos;
+		Vector3 firingDir = lookDir;
 
 		if (float.IsNaN(o2))
 		{
@@ -75,6 +118,11 @@ public class TurretController : MonoBehaviour
 			firingDir = firingAngle * lookNorm;
 		}
 
+		return firingDir;
+	}
+
+	private void RotateBarrelTo(Vector3 firingDir)
+	{
 		var localFiringDir = _car.InverseTransformVector(firingDir);
 
 		var yawDir = localFiringDir;
@@ -99,45 +147,92 @@ public class TurretController : MonoBehaviour
 
 		//print(Quaternion.Angle(lift, Quaternion.identity));
 		_barrel.localRotation = Quaternion.RotateTowards(_barrel.localRotation, lift, Time.deltaTime * damping);
+	}
 
+	private Vector3 GetTargetPosition()
+	{
+		var mousePos = Input.mousePosition;
+		var mouseWorldRay = Camera.main.ScreenPointToRay(mousePos);
+		RaycastHit mouseRayHitInfo;
+		var hit = Physics.Raycast(mouseWorldRay, out mouseRayHitInfo);
+
+		return hit ? mouseRayHitInfo.point : mouseWorldRay.GetPoint(100000);
+	}
+
+	private void HandleFiring()
+	{
+		var mousedown = Input.GetAxis("Fire1");
+
+		if (mousedown > 0f && cooldown <= 0f)
+		{
+			GameObject newBullet;
+			switch (CurrentWeaponType)
+			{
+				case WeaponType.Cannon:
+					{
+						newBullet = GameObject.Instantiate(projectilePrefab);
+						cooldown = 1f;
+					}
+					break;
+				case WeaponType.Pulse:
+					{
+						newBullet = GameObject.Instantiate(pulsePrefab);
+						cooldown = 0.1f;
+					}
+					break;
+				default:
+					Debug.LogError("No/Invalid Weapon Selected");
+					return;
+			}
+			newBullet.transform.position = _bulletStartPoint.position;
+			newBullet.transform.rotation = _bulletStartPoint.rotation;
+			newBullet.GetComponent<Rigidbody>().AddForce(_bulletStartPoint.forward * initialBulletVelocity, ForceMode.VelocityChange);
+
+		}
+
+		if (cooldown > 0)
+		{
+			cooldown -= Time.fixedDeltaTime;
+		}
+	}
+
+	void OnDrawGizmos()
+	{
 		//show current aim
 
 		int numSteps = 100;
 		float timeDelta = 1.0f / 20f;
 		Vector3 gravity = new Vector3(0, -9.8f, 0);
 
-		Vector3 position = _bulletStartPoint.position;
-		Vector3 velocity = _barrel.forward * initialBulletForce;
-		for (int i = 0; i < numSteps; ++i)
+		if (CurrentWeaponType == WeaponType.Cannon)
 		{
-			Debug.DrawLine(position, position + velocity.normalized * 2, Color.red);
-
-			RaycastHit hitInfo;
-			if (Physics.Raycast(position, velocity.normalized, out hitInfo, 2))
+			Vector3 position = _bulletStartPoint.position;
+			Vector3 velocity = _barrel.forward * initialBulletVelocity;
+			for (int i = 0; i < numSteps; ++i)
 			{
-				cursorPosition = hitInfo.point;
+				Debug.DrawLine(position, position + velocity.normalized * 2, Color.red);
+
+				RaycastHit hitInfo;
+				if (Physics.Raycast(position, velocity.normalized, out hitInfo, 2))
+				{
+					cursorPosition = hitInfo.point;
+				}
+
+				position += velocity * timeDelta + 0.5f * gravity * timeDelta * timeDelta;
+				velocity += (gravity * timeDelta);
 			}
-
-			position += velocity * timeDelta + 0.5f * gravity * timeDelta * timeDelta;
-			velocity += (gravity * timeDelta);
 		}
-
-
-		//shooting
-
-		var mousedown = Input.GetAxis("Fire1");
-
-		if (mousedown > 0f && cooldown <= 0f)
+		else
 		{
-			var newBullet = GameObject.Instantiate(projectilePrefab);
-			newBullet.transform.position = _bulletStartPoint.position;
-			newBullet.transform.rotation = _bulletStartPoint.rotation;
-			newBullet.GetComponent<Rigidbody>().AddForce(_bulletStartPoint.forward * initialBulletForce, ForceMode.Impulse);
-			print("bang!");
-
-			cooldown = 1f;
+			RaycastHit hitInfo;
+			if (Physics.Raycast(_barrel.position, _barrel.forward, out hitInfo, 250))
+			{
+				Gizmos.DrawLine(_barrel.position, hitInfo.point);
+			}
+			else
+			{
+				Gizmos.DrawLine(_barrel.position, _barrel.position + _barrel.forward * 250);
+			}
 		}
-
-		cooldown -= Time.fixedDeltaTime;
 	}
 }
