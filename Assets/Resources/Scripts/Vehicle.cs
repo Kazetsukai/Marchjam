@@ -2,6 +2,7 @@
 using System.Collections;
 using UnityEngine.Networking;
 using System;
+using UnityStandardAssets.Cameras;
 
 public class Vehicle : NetworkBehaviour
 {
@@ -33,12 +34,7 @@ public class Vehicle : NetworkBehaviour
     [SerializeField] float RearRocketForce = 20f;
     [SerializeField] ParticleSystem RearRocketParticles;
 
-    [SyncVar] Inputs _inputs;
-    [SyncVar] Vector3 _position;
-    [SyncVar] Quaternion _rotation;
-    [SyncVar] Vector3 _velocity;
-    [SyncVar] Vector3 _angularVelocity;
-
+    [SyncVar(hook ="UpdateStateFromServer")] State _state;
 
     public Rigidbody rb;
     float jumpCooldownElapsed;
@@ -46,34 +42,61 @@ public class Vehicle : NetworkBehaviour
 	void Start ()
     {
         rb = GetComponent<Rigidbody>();
+
+        if (isLocalPlayer)
+        {
+            FindObjectOfType<AutoCam>().SetTarget(gameObject.transform);
+        }
 	}
+
+    void Update()
+    {
+        SendInputsToServer();
+
+        var state = GetCurrentState();
+
+        if (isServer) SetStateForClients(state);
+    }
 
     void FixedUpdate()
     {
-        SendInputsToServer();
         
         UpdatePhysics();
 
-        SetStateForClients();
-        UpdateStateFromServer();
+    }
+
+    private State GetCurrentState()
+    {
+        return new State(_state)
+        {
+            Position = rb.position,
+            Rotation = rb.rotation,
+            Velocity = rb.velocity,
+            AngularVelocity = rb.angularVelocity
+        };
     }
 
     [Server]
-    private void SetStateForClients()
+    private void SetStateForClients(State state)
     {
-        _position = rb.position;
-        _rotation = rb.rotation;
-        _velocity = rb.velocity;
-        _angularVelocity = rb.angularVelocity;
+        // Set the _state which will go to each client
+        _state = state;
     }
-
-    [Client]
-    private void UpdateStateFromServer()
+    
+    private void UpdateStateFromServer(State newState)
     {
-        rb.position = _position;
-        rb.rotation = _rotation;
-        rb.velocity = _velocity;
-        rb.angularVelocity = _angularVelocity;
+        // Store the newly received state.
+        _state = newState;
+
+        rb.MovePosition(_state.Position);
+        rb.MoveRotation(_state.Rotation);
+        rb.velocity = _state.Velocity;
+        //rb.angularVelocity = _state.AngularVelocity;
+        // Apply it locally but only if it is different enough from prediction.
+        //if (rb.position.IsDifferentEnoughTo(_state.Position)) rb.position = _state.Position;
+        //if (rb.rotation.IsDifferentEnoughTo(_state.Rotation)) rb.rotation = _state.Rotation;
+        //if (rb.velocity.IsDifferentEnoughTo(_state.Velocity)) rb.velocity = _state.Velocity;
+        //if (rb.angularVelocity.IsDifferentEnoughTo(_state.AngularVelocity)) rb.angularVelocity = _state.AngularVelocity;
     }
 
     private void UpdatePhysics()
@@ -87,26 +110,26 @@ public class Vehicle : NetworkBehaviour
         {
             if (FWD && RWD)
             {
-                Wheel_BL.DriveWheel((_inputs.Throttle * DriveForce * Time.deltaTime) / 4f);
-                Wheel_BR.DriveWheel((_inputs.Throttle * DriveForce * Time.deltaTime) / 4f);
-                Wheel_FL.DriveWheel((_inputs.Throttle * DriveForce * Time.deltaTime) / 4f);
-                Wheel_FR.DriveWheel((_inputs.Throttle * DriveForce * Time.deltaTime) / 4f);
+                Wheel_BL.DriveWheel((_state.Inputs.Throttle * DriveForce * Time.deltaTime) / 4f);
+                Wheel_BR.DriveWheel((_state.Inputs.Throttle * DriveForce * Time.deltaTime) / 4f);
+                Wheel_FL.DriveWheel((_state.Inputs.Throttle * DriveForce * Time.deltaTime) / 4f);
+                Wheel_FR.DriveWheel((_state.Inputs.Throttle * DriveForce * Time.deltaTime) / 4f);
             }
             else if (FWD && !RWD)
             {
-                Wheel_FL.DriveWheel((_inputs.Throttle * DriveForce * Time.deltaTime) / 2f);
-                Wheel_FR.DriveWheel((_inputs.Throttle * DriveForce * Time.deltaTime) / 2f);
+                Wheel_FL.DriveWheel((_state.Inputs.Throttle * DriveForce * Time.deltaTime) / 2f);
+                Wheel_FR.DriveWheel((_state.Inputs.Throttle * DriveForce * Time.deltaTime) / 2f);
             }
             else if (!FWD && RWD)
             {
-                Wheel_BL.DriveWheel((_inputs.Throttle * DriveForce * Time.deltaTime) / 2f);
-                Wheel_BR.DriveWheel((_inputs.Throttle * DriveForce * Time.deltaTime) / 2f);
+                Wheel_BL.DriveWheel((_state.Inputs.Throttle * DriveForce * Time.deltaTime) / 2f);
+                Wheel_BR.DriveWheel((_state.Inputs.Throttle * DriveForce * Time.deltaTime) / 2f);
             }
         }
 
         //Apply steering
-        Wheel_FR.transform.localEulerAngles = new Vector3(Wheel_FR.transform.localEulerAngles.x, _inputs.Steering * MaxSteeringAngle * SpeedVsSteeringFactor.Evaluate(rb.velocity.magnitude), Wheel_FR.transform.localEulerAngles.z);
-        Wheel_FL.transform.localEulerAngles = new Vector3(Wheel_FL.transform.localEulerAngles.x, _inputs.Steering * MaxSteeringAngle * SpeedVsSteeringFactor.Evaluate(rb.velocity.magnitude), Wheel_FL.transform.localEulerAngles.z);
+        Wheel_FR.transform.localEulerAngles = new Vector3(Wheel_FR.transform.localEulerAngles.x, _state.Inputs.Steering * MaxSteeringAngle * SpeedVsSteeringFactor.Evaluate(rb.velocity.magnitude), Wheel_FR.transform.localEulerAngles.z);
+        Wheel_FL.transform.localEulerAngles = new Vector3(Wheel_FL.transform.localEulerAngles.x, _state.Inputs.Steering * MaxSteeringAngle * SpeedVsSteeringFactor.Evaluate(rb.velocity.magnitude), Wheel_FL.transform.localEulerAngles.z);
 
         //Debug.Log(rb.velocity.magnitude);
 
@@ -117,7 +140,7 @@ public class Vehicle : NetworkBehaviour
         }
 
         //Apply rocket forces       
-        if (_inputs.RocketRear > 0)
+        if (_state.Inputs.RocketRear > 0)
         {
             rb.AddForce(transform.forward * RearRocketForce, ForceMode.Force);
             RearRocketParticles.enableEmission = true;
@@ -137,7 +160,7 @@ public class Vehicle : NetworkBehaviour
 
         //Apply jump        
         jumpCooldownElapsed += Time.deltaTime;
-        if ((_inputs.Jump > 0) && (jumpCooldownElapsed >= JumpCooldownTime))
+        if ((_state.Inputs.Jump > 0) && (jumpCooldownElapsed >= JumpCooldownTime))
         {
             // if at least 3/4 wheels are touching ground
             if (wheelsOnGround >= 3)
@@ -151,15 +174,15 @@ public class Vehicle : NetworkBehaviour
         //Apply air movement
         if (wheelsOnGround <= 2)
         {
-            if (_inputs.Handbrake > 0)
+            if (_state.Inputs.Handbrake > 0)
             {
-                rb.AddRelativeTorque(0, 0, -RollTorque * _inputs.Horizontal, ForceMode.Force);
+                rb.AddRelativeTorque(0, 0, -RollTorque * _state.Inputs.Horizontal, ForceMode.Force);
             }
             else
             {
-                rb.AddRelativeTorque(0, YawTorque * _inputs.Horizontal, 0, ForceMode.Force);
+                rb.AddRelativeTorque(0, YawTorque * _state.Inputs.Horizontal, 0, ForceMode.Force);
             }
-            rb.AddRelativeTorque(-PitchTorque * _inputs.Pitch, 0, 0, ForceMode.Force);
+            rb.AddRelativeTorque(-PitchTorque * _state.Inputs.Pitch, 0, 0, ForceMode.Force);
         }
     }
 
@@ -167,8 +190,7 @@ public class Vehicle : NetworkBehaviour
     {
         if (isLocalPlayer)
         {
-            //Get input
-            CmdSetInputs(new Inputs()
+            var input = new Inputs()
             {
                 Throttle = Input.GetAxis("Vertical"),
                 Steering = Input.GetAxis("Horizontal"),
@@ -177,23 +199,41 @@ public class Vehicle : NetworkBehaviour
                 Handbrake = Input.GetAxis("Handbrake"),
                 Horizontal = Input.GetAxis("Horizontal"),
                 Pitch = Input.GetAxis("Pitch")
-            });
+            };
+            
+            // Send to server
+            CmdSetInputs(input);
         }
     }
 
     [Command]
     private void CmdSetInputs(Inputs inputs)
     {
-        _inputs = inputs;
-        Debug.Log("Setting inputs!");
+        _state = new State(_state) { Inputs = inputs };
     }
 
-    void Update ()
+
+    struct State
     {
+        public State(State oldState)
+        {
+            TimeStamp = Time.unscaledTime;
+            Inputs = oldState.Inputs;
+            Position = oldState.Position;
+            Rotation = oldState.Rotation;
+            Velocity = oldState.Velocity;
+            AngularVelocity = oldState.Velocity;
+        }
 
-	}
+        public float TimeStamp;
+        public Inputs Inputs;
+        public Vector3 Position;
+        public Quaternion Rotation;
+        public Vector3 Velocity;
+        public Vector3 AngularVelocity;
+    }
 
-    private struct Inputs
+    struct Inputs
     {
         public float Handbrake;
         public float Horizontal;
