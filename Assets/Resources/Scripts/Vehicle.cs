@@ -62,6 +62,9 @@ public class Vehicle : NetworkBehaviour
     [SerializeField]
     float RocketLightTurnOnDuration = 0.2f;
 
+    [Header("Misc")]
+    public bool JoeTypeCamera = false;
+
     [SyncVar(hook = "UpdateStateFromServer")]
     State _state;
 
@@ -82,7 +85,15 @@ public class Vehicle : NetworkBehaviour
 
         if (isLocalPlayer)
         {
-            FindObjectOfType<AutoCam>().SetTarget(gameObject.transform);
+            if (JoeTypeCamera)      //Temp thing to allow use of both car types
+            {
+                FindObjectOfType<Camera_StraightLook>().Target = transform;
+                FindObjectOfType<Camera_StraightLook>().turret = GetComponentInChildren<TurretController_Straight>();
+            }
+            else
+            {
+                FindObjectOfType<AutoCam>().SetTarget(gameObject.transform);
+            }
         }
     }
 
@@ -93,8 +104,7 @@ public class Vehicle : NetworkBehaviour
 
     void Update()
     {
-
-        //UpdateEffects();
+        UpdateEffects();
     }
 
     void FixedUpdate()
@@ -104,7 +114,6 @@ public class Vehicle : NetworkBehaviour
         if (isServer) SetStateForClients(GetCurrentState());
 
         UpdatePhysics();
-        
     }
 
     private State GetCurrentState()
@@ -161,7 +170,6 @@ public class Vehicle : NetworkBehaviour
 
     private void UpdatePhysics()
     {
-
         //Update rigidbody centerofmass position
         rb.centerOfMass = transform.InverseTransformPoint(CenterOfMass.position);
 
@@ -204,6 +212,7 @@ public class Vehicle : NetworkBehaviour
         {
             rb.AddForce(transform.forward * RearRocketForce, ForceMode.Force);
             RearRocketParticles.enableEmission = true;
+            Debug.Log("boost");
         }
         else
         {
@@ -248,6 +257,7 @@ public class Vehicle : NetworkBehaviour
 
     void UpdateEffects()
     {
+        rocketActivated = input.RocketRear > 0 ? true : false;
         RearRocketParticles.enableEmission = rocketActivated;
 
         //Update rocket light (UGLY CODE. will improve later)
@@ -260,15 +270,17 @@ public class Vehicle : NetworkBehaviour
             rocketActiveElapsed = Mathf.Clamp(rocketActiveElapsed - Time.deltaTime, 0, RocketLightTurnOnDuration);
         }
 
-        Debug.Log(rocketActiveElapsed);
-        RocketLight.intensity = (rocketActiveElapsed / RocketLightTurnOnDuration) * RocketLightIntensity;
+        if (RocketLight != null)
+        {
+            RocketLight.intensity = (rocketActiveElapsed / RocketLightTurnOnDuration) * RocketLightIntensity;
+        }
     }
 
     private void SendInputsToServer()
     {
-        if (isLocalPlayer)
+        if (isLocalPlayer)       
         {
-            var input = new Inputs()
+            input = new Inputs()
             {
                 InputNumber = _nextInputNumber++,
                 Throttle = Input.GetAxis("Vertical"),

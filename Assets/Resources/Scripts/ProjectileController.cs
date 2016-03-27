@@ -36,7 +36,6 @@ public class ProjectileController : MonoBehaviour
 	{
 		var explosion = (GameObject)Instantiate(Explosion, transform.position, Quaternion.identity);
 		var hits = Physics.OverlapSphere(transform.position, explosionDist);
-		print("hit " + hits.Length);
 		foreach (var col in hits)
 		{
 			var enemy = col.GetComponentInParent<EnemyBase>();

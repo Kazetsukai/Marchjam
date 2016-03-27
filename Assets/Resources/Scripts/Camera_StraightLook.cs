@@ -5,7 +5,7 @@ public class Camera_StraightLook : MonoBehaviour
 {
     [Header("Tracking")]
     [SerializeField] Camera camera;
-    [SerializeField] Transform Target;    
+    public Transform Target;    
     [SerializeField] float Distance;
     [SerializeField] float RotateRate = 20f;
     [SerializeField] float CameraVerticalOffsetAngle;
@@ -17,7 +17,7 @@ public class Camera_StraightLook : MonoBehaviour
     [SerializeField] float CurrentVertAngle;
 
     [Header("Turret Control")]
-    [SerializeField] TurretController_Straight turret;
+    public TurretController_Straight turret;
 
     [Header("Misc")]
     [SerializeField] UpdateType updateType = UpdateType.FixedUpdate;
@@ -58,20 +58,23 @@ public class Camera_StraightLook : MonoBehaviour
 
     void UpdateCamera()
     {
-        //Get mouse input, increment camera angles.
-        Vector2 mouseDelta = new Vector2(Input.GetAxis("Mouse X"), Input.GetAxis("Mouse Y"));
-        CurrentHorizAngle -= mouseDelta.x * RotateRate * Time.deltaTime;
-        CurrentVertAngle += mouseDelta.y * RotateRate * Time.deltaTime;      
-        CurrentVertAngle = Mathf.Clamp(CurrentVertAngle, MinVertAngle, MaxVertAngle);  //Clamp vertical angle
+        if (Target != null)
+        {
 
-        //Move camera mount position (this object. Actual camera is child of this object)
-        Vector3 offset = new Vector3(Mathf.Cos(Mathf.Deg2Rad * CurrentHorizAngle) * Mathf.Sin(Mathf.Deg2Rad * CurrentVertAngle), Mathf.Cos(Mathf.Deg2Rad * CurrentVertAngle), Mathf.Sin(Mathf.Deg2Rad * CurrentHorizAngle) * Mathf.Sin(Mathf.Deg2Rad * CurrentVertAngle)) * Distance;       
-        transform.position = Target.transform.position + offset;
+            //Get mouse input, increment camera angles.
+            Vector2 mouseDelta = new Vector2(Input.GetAxis("Mouse X"), Input.GetAxis("Mouse Y"));
+            CurrentHorizAngle -= mouseDelta.x * RotateRate * Time.deltaTime;
+            CurrentVertAngle += mouseDelta.y * RotateRate * Time.deltaTime;
+            CurrentVertAngle = Mathf.Clamp(CurrentVertAngle, MinVertAngle, MaxVertAngle);  //Clamp vertical angle
 
-        //Make camera look at target, then add extra rotation offset to camera on it's local axis
-        camera.transform.LookAt(Target);
-        camera.transform.localEulerAngles += new Vector3(CameraVerticalOffsetAngle, 0, 0);
+            //Move camera mount position (this object. Actual camera is child of this object)
+            Vector3 offset = new Vector3(Mathf.Cos(Mathf.Deg2Rad * CurrentHorizAngle) * Mathf.Sin(Mathf.Deg2Rad * CurrentVertAngle), Mathf.Cos(Mathf.Deg2Rad * CurrentVertAngle), Mathf.Sin(Mathf.Deg2Rad * CurrentHorizAngle) * Mathf.Sin(Mathf.Deg2Rad * CurrentVertAngle)) * Distance;
+            transform.position = Target.transform.position + offset;
 
+            //Make camera look at target, then add extra rotation offset to camera on it's local axis
+            camera.transform.LookAt(Target);
+            camera.transform.localEulerAngles += new Vector3(CameraVerticalOffsetAngle, 0, 0);
+        }
         //Unlock cursor
         if (F1UnlocksCursor)
         {
@@ -91,20 +94,23 @@ public class Camera_StraightLook : MonoBehaviour
 
     void UpdateTurret()
     {
-        //Raycast from center of camera into world 
-        RaycastHit mouseRayHitInfo;
-        Ray mouseWorldRay = Camera.main.ScreenPointToRay(Input.mousePosition);
-        bool hit = Physics.Raycast(mouseWorldRay, out mouseRayHitInfo);
+        if (turret != null)
+        {
+            //Raycast from center of camera into world 
+            RaycastHit mouseRayHitInfo;
+            Ray mouseWorldRay = Camera.main.ScreenPointToRay(Input.mousePosition);
+            bool hit = Physics.Raycast(mouseWorldRay, out mouseRayHitInfo);
 
-        //Rotate turret base to face camera direction
-        if (hit)
-        {
-            turret.transform.rotation = Quaternion.LookRotation(mouseRayHitInfo.point - camera.transform.position, turret.ParentVehicle.transform.up);
-        }
-        else
-        {
-            turret.transform.rotation = Quaternion.LookRotation(camera.transform.forward, turret.ParentVehicle.transform.up);
-        }
+            //Rotate turret base to face camera direction
+            if (hit)
+            {
+                turret.transform.rotation = Quaternion.LookRotation(mouseRayHitInfo.point - camera.transform.position, turret.ParentVehicle.transform.up);
+            }
+            else
+            {
+                turret.transform.rotation = Quaternion.LookRotation(camera.transform.forward, turret.ParentVehicle.transform.up);
+            }
+        }      
     }
 
     void LockCursor()
