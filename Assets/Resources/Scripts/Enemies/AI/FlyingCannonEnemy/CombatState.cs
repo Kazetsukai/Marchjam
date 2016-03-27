@@ -70,8 +70,8 @@ namespace AIFlyingCannonEnemy
                 );
             }
 
-
-            if (ExecuteFrameMethods() && _targetDistance <= AiController.MaxDistance)
+            //Only fire if aimed correctly and target within acceptable distance
+            if (ExecuteFrameMethods() && _targetDistance <= AiController.MaxDistance && _targetDistance >= AiController.MinDistance)
             {
                 if (ControlledEntity.CurrentCooldown < 0)
                 {
