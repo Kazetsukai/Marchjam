@@ -69,6 +69,7 @@ public class Vehicle : NetworkBehaviour
     State _state;
 
     Queue<State> _predictedStates = new Queue<State>();
+    Inputs input;
 
     bool rocketActivated;
     float rocketActiveElapsed;
