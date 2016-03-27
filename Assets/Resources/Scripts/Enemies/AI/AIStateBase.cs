@@ -4,17 +4,28 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 
+/// <summary>
+/// Base type for an AI State
+/// </summary>
+/// <typeparam name="AIController">The AIController derived from AIControllerBase that uses this state</typeparam>
+/// <typeparam name="ControlledEntityType">Type of entity that this AI State applies to</typeparam>
 public abstract class AIStateBase<AIController, ControlledEntityType> where AIController : AIControllerBase<ControlledEntityType>
 {
-    protected ControlledEntityType _controlledEntity
+    /// <summary>
+    /// Shorthand access to ControlledEntity from AIController
+    /// </summary>
+    public ControlledEntityType ControlledEntity
     {
         get
         {
-            return _aiController.ControlledEntity;
+            return AiController.ControlledEntity;
         }
     }
 
-    protected AIController _aiController
+    /// <summary>
+    /// Reference to parent AIController
+    /// </summary>
+    public AIController AiController
     {
         get;
         private set;
@@ -22,29 +33,41 @@ public abstract class AIStateBase<AIController, ControlledEntityType> where AICo
 
     protected AIStateBase(AIController aiController)
     {
-        _aiController = aiController;
-        _frameMethods = new Dictionary<Func<bool>, bool>();
+        AiController = aiController;
+        FrameMethods = new Dictionary<Func<bool>, bool>();
     }
 
-    protected Dictionary<Func<bool>, bool> _frameMethods;
+    /// <summary>
+    /// Dictionary of methods returning bools that will be executed each FixedUpdate, with their results stored in the Dictionary.
+    /// Should be initialised in the AIState's constructor, e.g. FrameMethods = new Dictionary<Func<bool>, bool>() { FindMyEnemy, false } 
+    /// with a method named FindMyEnemy that returns true when my enemy is found.
+    /// </summary>
+    protected Dictionary<Func<bool>, bool> FrameMethods;
 
+    /// <summary>
+    /// Resets the result of all FrameMethods before execute the FixedUpdate code for this State
+    /// </summary>
     public void TriggerFixedUpdate()
     {
-        foreach (var key in _frameMethods.Keys.ToList())
+        foreach (var key in FrameMethods.Keys.ToList())
         {
-            _frameMethods[key] = false;
+            FrameMethods[key] = false;
         }
 
         OnFixedUpdate();
     }
 
+    /// <summary>
+    /// Executes and updates the result of all FrameMethods and returns true if all FrameMethods returned true
+    /// </summary>
+    /// <returns>True if all FrameMethods returned true</returns>
     protected bool ExecuteFrameMethods()
     {
         bool returnValue = true;
-        foreach (var key in _frameMethods.Keys.ToList())
+        foreach (var key in FrameMethods.Keys.ToList())
         {
-            _frameMethods[key] = key();
-            if (!_frameMethods[key])
+            FrameMethods[key] = key();
+            if (!FrameMethods[key])
             {
                 returnValue = false;
             }
