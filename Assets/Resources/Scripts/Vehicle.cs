@@ -85,18 +85,20 @@ public class Vehicle : NetworkBehaviour
     
     private void UpdateStateFromServer(State newState)
     {
-        // Store the newly received state.
-        _state = newState;
-
-        rb.MovePosition(_state.Position);
-        rb.MoveRotation(_state.Rotation);
-        rb.velocity = _state.Velocity;
-        //rb.angularVelocity = _state.AngularVelocity;
-        // Apply it locally but only if it is different enough from prediction.
-        //if (rb.position.IsDifferentEnoughTo(_state.Position)) rb.position = _state.Position;
-        //if (rb.rotation.IsDifferentEnoughTo(_state.Rotation)) rb.rotation = _state.Rotation;
-        //if (rb.velocity.IsDifferentEnoughTo(_state.Velocity)) rb.velocity = _state.Velocity;
-        //if (rb.angularVelocity.IsDifferentEnoughTo(_state.AngularVelocity)) rb.angularVelocity = _state.AngularVelocity;
+            // Store the newly received state.
+            _state = newState;
+        if (!isServer)
+        {
+            rb.MovePosition(_state.Position);
+            rb.MoveRotation(_state.Rotation);
+            rb.velocity = _state.Velocity;
+        }
+            //rb.angularVelocity = _state.AngularVelocity;
+            // Apply it locally but only if it is different enough from prediction.
+            //if (rb.position.IsDifferentEnoughTo(_state.Position)) rb.position = _state.Position;
+            //if (rb.rotation.IsDifferentEnoughTo(_state.Rotation)) rb.rotation = _state.Rotation;
+            //if (rb.velocity.IsDifferentEnoughTo(_state.Velocity)) rb.velocity = _state.Velocity;
+            //if (rb.angularVelocity.IsDifferentEnoughTo(_state.AngularVelocity)) rb.angularVelocity = _state.AngularVelocity;
     }
 
     private void UpdatePhysics()
