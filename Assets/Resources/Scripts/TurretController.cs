@@ -5,16 +5,16 @@ public class TurretController : MonoBehaviour
 {
 	public GameObject projectilePrefab;
 
-	private const float maxTurretRotation = 180f;
-	private const float maxBarrelLift = 45f;
-	private const float maxBarrelDrop = 15f;
+	[SerializeField] float maxTurretRotation = 180f;
+	[SerializeField] float maxBarrelLift = 45f;
+	[SerializeField] float maxBarrelDrop = 15f;
 	private Transform _transform;
 	private Transform _car;
 	private Transform _barrel;
 	private Transform _bulletStartPoint;
-	private float damping = 100f;
-	private float initialBulletForce = 40f;
-	private float cooldown = 0f;
+	[SerializeField] float damping = 100f;
+	[SerializeField] float initialBulletForce = 40f;
+	[SerializeField] float cooldown = 0f;
 	public Vector3 cursorPosition;
 
 	// Use this for initialization
