@@ -4,8 +4,9 @@ using System.Linq;
 using System.Text;
 using UnityEngine;
 
-namespace Enemies
+namespace Entities
 {
+    [RequireComponent(typeof(Rigidbody))]
     public class PhysicalEntity : MonoBehaviour
     {
         public Rigidbody Body
