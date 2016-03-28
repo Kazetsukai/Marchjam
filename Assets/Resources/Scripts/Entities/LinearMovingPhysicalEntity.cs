@@ -8,9 +8,9 @@ namespace Entities
 {
     public class LinearMovingPhysicalEntity : PhysicalEntity
     {
-        [Header("Note that the first direction specified will be the default, any < 0 numbers will revert to default.")]
-        [Header("Any subsequent < 0 numbers will revert to default.")]
-        public MoveProperties[] MovementProperties = new MoveProperties[] 
+        [Header("Note that the first direction specified will be the default", order = 0)]
+        [Header("Any subsequent < 0 numbers will revert to default.", order = 1)]
+        public MoveProperties[] MovementProperties = new MoveProperties[]
         {
             new MoveProperties()
             {
@@ -30,31 +30,18 @@ namespace Entities
         }
 
         /// <summary>
-        /// A list of MoveDirections considered distinct, that is, representing movement in one axis
-        /// </summary>
-        public static readonly List<MoveDirection> DistinctDirections = new List<MoveDirection>
-        {
-            MoveDirection.Forward,
-            MoveDirection.Backward,
-            MoveDirection.Right,
-            MoveDirection.Left,
-            MoveDirection.Up,
-            MoveDirection.Down,
-        };
-
-        /// <summary>
-        /// Returns the corresponding Vector3 for the given MoveDrection
+        /// Returns the corresponding Vector3 for the given MoveDirection
         /// </summary>
         /// <param name="moveDirection"></param>
         /// <returns></returns>
         public Vector3 GetVector3DirectionFromMoveDirection(MoveDirection moveDirection)
         {
             Vector3 vectorDirection = Vector3.zero;
-            foreach (MoveDirection distinctDirection in DistinctDirections)
+            foreach (MoveDirection distinctDirection in Enum.GetValues(typeof(MoveDirectionDistinct)))
             {
                 if ((moveDirection & distinctDirection) > 0)
                 {
-                    vectorDirection += GetVector3DirectionFromDistinctMoveDirection(distinctDirection);
+                    vectorDirection += GetVector3DirectionFromMoveDirection(distinctDirection);
                 }
             }
 
@@ -62,33 +49,38 @@ namespace Entities
         }
 
         /// <summary>
-        /// Returns the corresponding Vector3 for the given MoveDrection
+        /// Returns the corresponding Vector3 for the given MoveDirectionDistinct
         /// </summary>
-        /// <param name="distinctDirection">Must be a distinct MoveDirection</param>
+        /// <param name="distinctDirection"></param>
         /// <returns></returns>
-        private Vector3 GetVector3DirectionFromDistinctMoveDirection(MoveDirection distinctDirection)
+        public Vector3 GetVector3DirectionFromMoveDirection(MoveDirectionDistinct distinctDirection)
         {
+            if (!Enum.IsDefined(typeof(MoveDirectionDistinct), distinctDirection))
+            {
+                throw new ArgumentException("Invalid value supplied for direction:" + distinctDirection.ToString());
+            }
+
             switch (distinctDirection)
             {
-                case MoveDirection.Forward:
+                case MoveDirectionDistinct.Forward:
                     return Vector3.forward;
-                case MoveDirection.Backward:
+                case MoveDirectionDistinct.Backward:
                     return Vector3.back;
-                case MoveDirection.Right:
+                case MoveDirectionDistinct.Right:
                     return Vector3.right;
-                case MoveDirection.Left:
+                case MoveDirectionDistinct.Left:
                     return Vector3.left;
-                case MoveDirection.Up:
+                case MoveDirectionDistinct.Up:
                     return Vector3.up;
-                case MoveDirection.Down:
+                case MoveDirectionDistinct.Down:
                     return Vector3.down;
                 default:
-                    throw new InvalidOperationException("GetForceForDirection only supports distinct directions, " + Enum.GetName(typeof(MoveDirection), distinctDirection) + " is not a distinct direction");
+                    throw new NotImplementedException();
             }
         }
 
         /// <summary>
-        /// Returns the corresponding MoveDrection for the given Vector3 direction
+        /// Returns the corresponding MoveDirection for the given Vector3 direction
         /// </summary>
         /// <param name="direction">A Vector3 representing the direction</param>
         /// <returns></returns>
@@ -130,6 +122,30 @@ namespace Entities
         }
 
         /// <summary>
+        /// Returns a Dictionary of distinct move directions with the scale of the given Vector3 for the relevant directions
+        /// </summary>
+        /// <param name="direction"></param>
+        /// <returns></returns>
+        public Dictionary<MoveDirectionDistinct, float> GetScaledMoveDirectionFromVector3Direction(Vector3 direction)
+        {
+            MoveDirection directions = GetMoveDirectionFromVector3Direction(direction);
+
+            Dictionary<MoveDirectionDistinct, float> scaledDirections = new Dictionary<MoveDirectionDistinct, float>();
+
+            foreach (MoveDirection distinctDirection in Enum.GetValues(typeof(MoveDirectionDistinct)))
+            {
+                if ((directions & distinctDirection) > 0)
+                {
+                    Vector3 thisDirection = new Vector3(direction.x, direction.y, direction.z);
+                    thisDirection.Scale(GetVector3DirectionFromMoveDirection((MoveDirectionDistinct)distinctDirection));
+                    scaledDirections.Add((MoveDirectionDistinct)distinctDirection, thisDirection.magnitude);
+                }
+            }
+
+            return scaledDirections;
+        }
+
+        /// <summary>
         /// Moves in the specified direction targeting the specified percentage, e.g. if maximum speed is 50 and desiredSpeedPercent is 0.5, 
         /// velocity will be set to MinimumSpeed &lt;= velocity &lt;= 25
         /// </summary>
@@ -139,12 +155,41 @@ namespace Entities
         {
             Vector3 forceModifier = Vector3.zero;
 
-            foreach (MoveDirection distinceDirection in DistinctDirections)
+            foreach (MoveDirection distinctDirection in Enum.GetValues(typeof(MoveDirectionDistinct)))
             {
-                if ((direction & distinceDirection) > 0)
+                if ((direction & distinctDirection) > 0)
                 {
-                    Body.AddRelativeForce(GetForceForDirection(desiredSpeedPercent, distinceDirection));
+                    MoveInDirection(desiredSpeedPercent, (MoveDirectionDistinct)distinctDirection);
                 }
+            }
+        }
+
+        /// <summary>
+        /// Moves in the specified direction targeting the specified percentage, e.g. if maximum speed is 50 and desiredSpeedPercent is 0.5, 
+        /// velocity will be set to MinimumSpeed &lt;= velocity &lt;= 25
+        /// </summary>
+        /// <param name="desiredSpeedPercent">Percentage of maximum speed desired, from 0.0f to 1.0f</param>
+        /// <param name="distinctDirection">Direction(s) to move in</param>
+        public void MoveInDirection(float desiredSpeedPercent, MoveDirectionDistinct distinctDirection)
+        {
+            if (!Enum.IsDefined(typeof(MoveDirectionDistinct), distinctDirection))
+            {
+                throw new ArgumentException("Invalid value supplied for direction:" + distinctDirection.ToString());
+            }
+
+            Body.AddRelativeForce(GetForceForDirection(desiredSpeedPercent, distinctDirection));
+        }
+
+        /// <summary>
+        /// Moves in the directions specified by the Vector3, i.e. 1,0,0 is equal to MoveDirection.Right at 100%, 
+        /// -1,0,0 is equal to MoveDirection.Left at 100%, 0,0.5f,0 is equal to MoveDirection.Up at 50%
+        /// </summary>
+        /// <param name="directionAndDesiredSpeedPercent"></param>
+        public void MoveInDirection(Vector3 directionAndDesiredSpeedPercent)
+        {
+            foreach (KeyValuePair<MoveDirectionDistinct, float> direction in GetScaledMoveDirectionFromVector3Direction(directionAndDesiredSpeedPercent))
+            {
+                MoveInDirection(direction.Value, (MoveDirection)direction.Key);
             }
         }
 
@@ -154,41 +199,56 @@ namespace Entities
         /// <param name="desiredSpeedPercent">Percentage of maximum speed desired, from 0.0f to 1.0f</param>
         /// <param name="distinctDirection">Distinct direction to move in</param>
         /// <returns></returns>
-        private Vector3 GetForceForDirection(float desiredSpeedPercent, MoveDirection distinctDirection)
+        private Vector3 GetForceForDirection(float desiredSpeedPercent, MoveDirectionDistinct distinctDirection)
         {
-            int indexOfDistinctDirection = DistinctDirections.IndexOf(distinctDirection);
-            if (indexOfDistinctDirection < 0)
+            if (!Enum.IsDefined(typeof(MoveDirectionDistinct), distinctDirection))
             {
-                throw new InvalidOperationException("GetForceForDirection only supports distinct directions, " + Enum.GetName(typeof(MoveDirection), distinctDirection) + " is not a distinct direction");
+                throw new ArgumentException("Invalid value supplied for direction:" + distinctDirection.ToString());
             }
 
+            //Invert direction if less than 0
             if (desiredSpeedPercent < 0)
             {
-                //Each pair of distinct directions is odd indexed followed by even indexed
-                //so if we need to find the opposite direction we have to either step backward
-                //or step forward depending on whether we're odd or even indexed respectively
-                distinctDirection = DistinctDirections[indexOfDistinctDirection + (indexOfDistinctDirection % 2 == 0 ? 1 : -1)];
+                switch (distinctDirection)
+                {
+                    case MoveDirectionDistinct.Forward:
+                        distinctDirection = MoveDirectionDistinct.Backward;
+                        break;
+                    case MoveDirectionDistinct.Backward:
+                        distinctDirection = MoveDirectionDistinct.Forward;
+                        break;
+                    case MoveDirectionDistinct.Right:
+                        distinctDirection = MoveDirectionDistinct.Left;
+                        break;
+                    case MoveDirectionDistinct.Left:
+                        distinctDirection = MoveDirectionDistinct.Right;
+                        break;
+                    case MoveDirectionDistinct.Up:
+                        distinctDirection = MoveDirectionDistinct.Down;
+                        break;
+                    case MoveDirectionDistinct.Down:
+                        distinctDirection = MoveDirectionDistinct.Up;
+                        break;
+                    default:
+                        throw new NotImplementedException();
+                }
             }
 
             //Normalise desired speed
             desiredSpeedPercent = Mathf.Min(1, Mathf.Abs(desiredSpeedPercent));
 
             //Find settings that apply to the specified direction, if there are none we can't move in this direction
-            MoveProperties applicableProperties = MovementProperties.FirstOrDefault(p => (p.ApplicableDirection & distinctDirection) > 0);
+            MoveProperties applicableProperties = MovementProperties.FirstOrDefault(p => (p.ApplicableDirection & (MoveDirection)distinctDirection) > 0);
             if (applicableProperties == null)
             {
                 return Vector3.zero;
             }
 
             Vector3 localVelocity = Body.transform.InverseTransformDirection(Body.velocity);
-            Vector3 directionAsVector = GetVector3DirectionFromDistinctMoveDirection(distinctDirection);
+            Vector3 directionAsVector = GetVector3DirectionFromMoveDirection(distinctDirection);
             localVelocity.Scale(directionAsVector);
 
             return directionAsVector * GetIncreaseInVelocity(applicableProperties, localVelocity.magnitude, desiredSpeedPercent);
-
-            //Shouldn't be possible to get here as the above switch catches all distinct directions, 
-            //if the direction specified wasn't distinct the earlier exception should be thrown
-            throw new InvalidOperationException("Something terrible happened :(");
         }
 
         /// <summary>
@@ -238,6 +298,8 @@ namespace Entities
             {
                 speedModifier = (currentVelocity * activeProperties.ExponentialAccelerationRate);
             }
+
+            speedModifier *= Time.fixedDeltaTime;
 
             //Cap speed modifier so that we don't exceed maximum speed
             if (currentVelocity + speedModifier > activeProperties.MaximumSpeed)

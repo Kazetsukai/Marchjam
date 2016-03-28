@@ -20,10 +20,10 @@ namespace Entities
 
 
         [Header("Specify a value for only ONE of the below two properties")]
-        [Tooltip("Amount of velocity to add every FixedUpdate until MaximumSpeed is reached. 0 = no acceleration, set to < 0 if using Exponential Acceleration Rate.")]
+        [Tooltip("Amount of velocity to add every second until MaximumSpeed is reached. 0 = no acceleration, set to < 0 if using Exponential Acceleration Rate.")]
         [SerializeField] public float LinearAccelerationRate;
 
-        [Tooltip("Amount to multiply current velocity by to get velocity to add every FixedUpdate. Requires MinimumSpeed > 0, 0 =  no acceleration, set to < 0 if using Linear Acceleration Rate.")]
+        [Tooltip("Amount to multiply current velocity by to get velocity to add every second. Requires MinimumSpeed > 0, 0 =  no acceleration, set to < 0 if using Linear Acceleration Rate.")]
         [SerializeField] public float ExponentialAccelerationRate;
     }
 }
