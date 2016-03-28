@@ -7,7 +7,7 @@ using System.Linq;
 
 public class PlayerNetworkCommands : NetworkBehaviour {
 
-
+    public bool useMouseCam_SorryDaniel = false;
     float localAdjust = 0;
     private Vehicle _playerVehicle;
     private Vehicle PlayerVehicle
@@ -33,10 +33,24 @@ public class PlayerNetworkCommands : NetworkBehaviour {
     // Only runs when this vehicle is our local player
     public override void OnStartLocalPlayer()
     {
-        // Point camera at our vehicle
-        var camera = GameObject.FindObjectOfType<AutoCam>();
-        if (camera != null)
-            camera.SetTarget(PlayerVehicle.gameObject.transform);
+        if (useMouseCam_SorryDaniel)    //Forgive me Daniel. I needed to make it work in my scene.... :(
+        {
+            var camera = GameObject.FindObjectOfType<Camera_StraightLook>();
+            if (camera != null)
+            {
+                camera.Target = PlayerVehicle.gameObject.transform;
+                camera.turret = PlayerVehicle.GetComponentInChildren<TurretController_Straight>();
+                camera.LockCursor();
+            }
+
+        }
+        else
+        {
+            // Point camera at our vehicle
+            var camera = GameObject.FindObjectOfType<AutoCam>();
+            if (camera != null)
+                camera.SetTarget(PlayerVehicle.gameObject.transform);
+        }
 
         StartCoroutine(SyncTime());
 
