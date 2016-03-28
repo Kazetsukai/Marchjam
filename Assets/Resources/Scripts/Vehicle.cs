@@ -6,7 +6,7 @@ using System.Linq;
 using UnityStandardAssets.Cameras;
 using System.Collections.Generic;
 
-public class Vehicle : NetworkBehaviour
+public class Vehicle : MonoBehaviour
 {
     [Header("Ground Movement")]
     [SerializeField]
@@ -62,13 +62,8 @@ public class Vehicle : NetworkBehaviour
     [SerializeField]
     float RocketLightTurnOnDuration = 0.2f;
 
-    [Header("Misc")]
-    public bool JoeTypeCamera = false;
-
-    [SyncVar(hook = "UpdateStateFromServer")]
     State _state;
-
-    Queue<State> _predictedStates = new Queue<State>();
+    
 
     bool rocketActivated;
     float rocketActiveElapsed;
@@ -76,107 +71,30 @@ public class Vehicle : NetworkBehaviour
 
     public Rigidbody rb;
     float jumpCooldownElapsed;
-    private int _nextInputNumber;
-    private Vector3 _diffP;
+    private bool _freshState;
 
     void Start()
     {
         rb = GetComponent<Rigidbody>();
-
-        if (isLocalPlayer)
-        {
-            if (JoeTypeCamera)      //Temp thing to allow use of both car types
-            {
-                FindObjectOfType<Camera_StraightLook>().Target = transform;
-                FindObjectOfType<Camera_StraightLook>().turret = GetComponentInChildren<TurretController_Straight>();
-            }
-            else
-            {
-                FindObjectOfType<AutoCam>().SetTarget(gameObject.transform);
-            }
-        }
-    }
-
-    void Awake()
-    {
-        rb.Sleep();
     }
 
     void Update()
-    {
-        SendInputsToServer();
+    {   
         UpdateEffects();
     }
 
     void FixedUpdate()
     {
-
-        if (isServer) SetStateForClients(GetCurrentState());
+        if (_freshState)
+        {
+            _freshState = false;
+            rb.position = _state.Position;
+            rb.velocity = _state.Velocity;
+            rb.rotation = _state.Rotation;
+            rb.angularVelocity = _state.AngularVelocity;
+        }
 
         UpdatePhysics();
-    }
-
-    private State GetCurrentState()
-    {
-        return new State(_state)
-        {
-            Position = rb.position,
-            Rotation = rb.rotation,
-            Velocity = rb.velocity,
-            AngularVelocity = rb.angularVelocity
-        };
-    }
-
-    [Server]
-    private void SetStateForClients(State state)
-    {
-        // Set the _state which will go to each client
-        //_state = state;
-    }
-
-    private void UpdateStateFromServer(State newState)
-    {
-        if (isLocalPlayer)
-            Debug.Log("Update from server - " + newState.Inputs.InputNumber);
-
-        if (!isServer)
-        {
-            // Throw out stale states
-            while (_predictedStates.Any() && _predictedStates.Peek().Inputs.InputNumber < newState.Inputs.InputNumber)
-                _predictedStates.Dequeue();
-
-            // Calculate predicted current state based on authoritative server state and predicted state
-            if (_predictedStates.Any())
-            {
-                var pos = newState.Position;
-                var rot = newState.Rotation;
-                var vel = newState.Velocity;
-                var angVel = newState.AngularVelocity;
-
-                var lastPred = _predictedStates.First();
-                foreach (var prediction in _predictedStates)
-                {
-                    pos += lastPred.Position - prediction.Position;
-                    rot = prediction.Rotation.RotationBetween(lastPred.Rotation) * rot;
-                    vel += lastPred.Velocity - prediction.Velocity;
-                    angVel += lastPred.AngularVelocity - prediction.AngularVelocity;
-
-                    lastPred = prediction;
-                }
-
-                _predictedStates.Clear();
-                //if (diffPosition.magnitude < 2) diffPosition = Vector3.zero;
-
-                //Debug.Log(newState.Position + " " + first.Position + "   -  " + (newState.Position - first.Position));
-                //Debug.Log(newState.AngularVelocity + " " + first.AngularVelocity + "   -  " + (diffAngularVelocity));
-                
-                Debug.Log(rb.position - pos);
-                rb.position = pos;
-                rb.rotation = rot;
-                rb.velocity = vel;
-                rb.angularVelocity = angVel;
-            }
-        }
     }
 
     private void UpdatePhysics()
@@ -287,64 +205,62 @@ public class Vehicle : NetworkBehaviour
         }
     }
 
-    private void SendInputsToServer()
+
+    public State GetCurrentState()
     {
-        if (isLocalPlayer)       
+        return new State(_state)
         {
-            var input = new Inputs()
-            {
-                InputNumber = _nextInputNumber++,
-                Throttle = Input.GetAxis("Vertical"),
-                Steering = Input.GetAxis("Horizontal"),
-                Jump = Input.GetAxis("Jump"),
-                RocketRear = Input.GetAxis("RocketRear"),
-                Handbrake = Input.GetAxis("Handbrake"),
-                Horizontal = Input.GetAxis("Horizontal"),
-                Pitch = Input.GetAxis("Pitch")
-            };
-
-            // Locally apply for client prediction
-            _state.Inputs = input;
-            _state = GetCurrentState();
-            _predictedStates.Enqueue(_state);
-
-            // Send to server
-            if (input.InputNumber % 5 == 0)
-            {
-                Debug.Log("Sending to server - " + input.InputNumber);
-                CmdSetInputs(input);
-            }
-        }
+            Position = rb.position,
+            Rotation = rb.rotation,
+            Velocity = rb.velocity,
+            AngularVelocity = rb.angularVelocity
+        };
     }
 
-    [Command]
-    private void CmdSetInputs(Inputs inputs)
+    public void SetState(State state, bool fresh = true)
     {
-        _state = new State(GetCurrentState()) { Inputs = inputs };
+        _state = state;
+        _freshState = fresh;
     }
 
+    public Inputs GetPlayerInputs()
+    {
+        return new Inputs()
+        {
+            Throttle = Input.GetAxis("Vertical"),
+            Steering = Input.GetAxis("Horizontal"),
+            Jump = Input.GetAxis("Jump"),
+            RocketRear = Input.GetAxis("RocketRear"),
+            Handbrake = Input.GetAxis("Handbrake"),
+            Horizontal = Input.GetAxis("Horizontal"),
+            Pitch = Input.GetAxis("Pitch")
+        };
+    }
 
-    struct State
+    public struct State
     {
         public State(State oldState)
         {
             Inputs = oldState.Inputs;
+            ServerTime = oldState.ServerTime;
             Position = oldState.Position;
             Rotation = oldState.Rotation;
             Velocity = oldState.Velocity;
             AngularVelocity = oldState.AngularVelocity;
         }
-        
+
         public Inputs Inputs;
+        public float ServerTime;
         public Vector3 Position;
         public Quaternion Rotation;
         public Vector3 Velocity;
         public Vector3 AngularVelocity;
     }
 
-    struct Inputs
+    public struct Inputs
     {
         public long InputNumber;
+        public float ServerTime;
         public float Handbrake;
         public float Horizontal;
         public float Jump;
@@ -353,4 +269,5 @@ public class Vehicle : NetworkBehaviour
         public float Steering;
         public float Throttle;
     }
+
 }
