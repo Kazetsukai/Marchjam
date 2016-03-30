@@ -86,7 +86,6 @@ namespace Entities
             }
         }
 
-
         /// <summary>
         /// Moves in the specified direction targeting the specified percentage, e.g. if maximum speed is 50 and desiredSpeedPercent is 0.5, 
         /// velocity will be set to MinimumSpeed &lt;= velocity &lt;= 25
@@ -120,7 +119,26 @@ namespace Entities
                 return;
             }
 
-            AddRelativeForce(GetForceForDirection(desiredSpeedPercent, distinctDirection));
+            Vector3 forceForDirection = GetForceForDirection(desiredSpeedPercent, distinctDirection);
+
+            if (_queuedMovement.sqrMagnitude == 0)
+            {
+                _queuedMovement = forceForDirection;
+                return;
+            }
+
+            //Combine current queued force with newly calculated force, so that opposites are cancelled out
+            Vector3 combinedForce = forceForDirection + _queuedMovement;
+
+            //Actual movement should be the greater of current movement or new movement, but if combined force was lower than either of these (due to the 
+            //opposites being cancelled) it should be selected instead. Then since we're comparing absolutes, multiply by the sign of combinedForce to ensure
+            //negative numbers are still negative
+            _queuedMovement = new Vector3
+            (
+                Mathf.Min(Mathf.Max(Mathf.Abs(_queuedMovement.x), Mathf.Abs(forceForDirection.x)), Mathf.Abs(combinedForce.x)) * Mathf.Sign(combinedForce.x),
+                Mathf.Min(Mathf.Max(Mathf.Abs(_queuedMovement.y), Mathf.Abs(forceForDirection.y)), Mathf.Abs(combinedForce.y)) * Mathf.Sign(combinedForce.x),
+                Mathf.Min(Mathf.Max(Mathf.Abs(_queuedMovement.z), Mathf.Abs(forceForDirection.z)), Mathf.Abs(combinedForce.z)) * Mathf.Sign(combinedForce.x)
+            );
         }
 
         /// <summary>
@@ -342,5 +360,17 @@ namespace Entities
 
             return scaledDirections;
         }
+
+        public void FixedUpdate()
+        {
+            if (_queuedMovement.sqrMagnitude > 0)
+            {
+                AddRelativeForce(_queuedMovement);
+            }
+
+            _queuedMovement = Vector3.zero;
+        }
+
+        private Vector3 _queuedMovement = Vector3.zero;
     }
 }
