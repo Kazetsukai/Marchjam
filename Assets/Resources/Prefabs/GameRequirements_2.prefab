@@ -245,9 +245,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   camera: {fileID: 2040570}
   Target: {fileID: 0}
-  Distance: 6
+  Distance: 8
   RotateRate: 100
-  CameraVerticalOffsetAngle: -20
+  CameraVerticalOffsetAngle: -15
   MaxVertAngle: 178
   MinVertAngle: 2
   CurrentHorizAngle: 0
