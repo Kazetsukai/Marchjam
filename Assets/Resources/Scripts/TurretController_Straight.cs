@@ -13,9 +13,12 @@ public class TurretController_Straight : MonoBehaviour
     [SerializeField] float FireCooldown = 0.5f;
 
     float cooldownElapsed;
+    Collider bulletCollider;
 
     void Start()
     {
+        bulletCollider = GetComponentInChildren<Collider>();
+
         //Allow player to shoot immediately when game starts
         cooldownElapsed = FireCooldown;
     }
@@ -43,5 +46,11 @@ public class TurretController_Straight : MonoBehaviour
 
         //Add initial force to bullet
         newBullet.GetComponent<Rigidbody>().AddForce(newBullet.transform.forward * BulletForce + ParentVehicle.velocity, ForceMode.Force);
+
+        //Set bullet to ignore all colliders of parent vehicle 
+        foreach (Collider parentCol in ParentVehicle.GetComponentsInChildren<Collider>())
+        {
+            Physics.IgnoreCollision(parentCol, bulletCollider, true);
+        }
     }
 }

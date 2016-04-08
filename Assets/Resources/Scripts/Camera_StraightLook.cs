@@ -26,7 +26,7 @@ public class Camera_StraightLook : MonoBehaviour
     void Start()
     {
         //Lock cursor to center of screen and hide
-        LockCursor();
+        UnlockCursor();
     }
 
     void FixedUpdate()
@@ -75,6 +75,11 @@ public class Camera_StraightLook : MonoBehaviour
             camera.transform.LookAt(Target);
             camera.transform.localEulerAngles += new Vector3(CameraVerticalOffsetAngle, 0, 0);
         }
+        else
+        {
+            UnlockCursor();
+        }
+
         //Unlock cursor
         if (F1UnlocksCursor)
         {
@@ -113,13 +118,13 @@ public class Camera_StraightLook : MonoBehaviour
         }      
     }
 
-    void LockCursor()
+    public void LockCursor()
     {
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
     }
 
-    void UnlockCursor()
+    public void UnlockCursor()
     {
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;

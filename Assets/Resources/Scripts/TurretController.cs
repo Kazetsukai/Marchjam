@@ -159,8 +159,7 @@ public class TurretController : MonoBehaviour
 		var clampAngle = liftDir.y > 0 ? maxBarrelLift : maxBarrelDrop;
 		if (Quaternion.Angle(lift, Quaternion.identity) >= clampAngle)
 			lift = Quaternion.RotateTowards(Quaternion.identity, lift, clampAngle);
-
-		//print(Quaternion.Angle(lift, Quaternion.identity));
+		
 		_barrel.localRotation = Quaternion.RotateTowards(_barrel.localRotation, lift, Time.deltaTime * damping);
 	}
 
@@ -169,8 +168,8 @@ public class TurretController : MonoBehaviour
 		var mousePos = Input.mousePosition;
 		var mouseWorldRay = Camera.main.ScreenPointToRay(mousePos);
 		RaycastHit mouseRayHitInfo;
-		var hit = Physics.Raycast(mouseWorldRay, out mouseRayHitInfo);
-
+		var hit = Physics.Raycast(mouseWorldRay, out mouseRayHitInfo, 250f, ~(1 << LayerMask.NameToLayer("Bullets")));
+		Debug.DrawLine(mouseWorldRay.origin, mouseWorldRay.origin+mouseWorldRay.direction * mouseRayHitInfo.distance);
 		return hit ? mouseRayHitInfo.point : mouseWorldRay.GetPoint(100000);
 	}
 
@@ -181,6 +180,7 @@ public class TurretController : MonoBehaviour
 		if (mousedown > 0f && cooldown <= 0f)
 		{
 			GameObject newBullet = GameObject.Instantiate(CurrentWeapon.ProjectilePrefab);
+			newBullet.SetLayerRecursively(LayerMask.NameToLayer("Bullets"));
 			newBullet.transform.position = _bulletStartPoint.position;
 			newBullet.transform.rotation = _bulletStartPoint.rotation;
 			newBullet.GetComponent<Rigidbody>().AddForce(_bulletStartPoint.forward * CurrentWeapon.InitialBulletVelocity, ForceMode.VelocityChange);
@@ -200,6 +200,7 @@ public class TurretController : MonoBehaviour
 		int numSteps = 100;
 		float timeDelta = 1.0f / 20f;
 		Vector3 gravity = new Vector3(0, -9.8f, 0);
+		Gizmos.color = Color.red;
 
 		if (CurrentWeapon.Style == WeaponStyle.Projectile)
 		{
@@ -207,7 +208,7 @@ public class TurretController : MonoBehaviour
 			Vector3 velocity = _barrel.forward * initialBulletVelocity;
 			for (int i = 0; i < numSteps; ++i)
 			{
-				Debug.DrawLine(position, position + velocity.normalized * 2, Color.red);
+				Gizmos.DrawLine(position, position + velocity.normalized * 2);
 
 				RaycastHit hitInfo;
 				if (Physics.Raycast(position, velocity.normalized, out hitInfo, 2))
@@ -222,7 +223,7 @@ public class TurretController : MonoBehaviour
 		else
 		{
 			RaycastHit hitInfo;
-			if (Physics.Raycast(_barrel.position, _barrel.forward, out hitInfo, 250))
+			if (Physics.Raycast(_barrel.position, _barrel.forward, out hitInfo, 250f, ~(1 << LayerMask.NameToLayer("Bullets"))))
 			{
 				Gizmos.DrawLine(_barrel.position, hitInfo.point);
 			}
