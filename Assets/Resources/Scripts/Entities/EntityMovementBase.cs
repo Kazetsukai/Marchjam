@@ -73,16 +73,26 @@ namespace Entities
             }
         }
 
+        public void MoveInDirection(Vector3 directionAndDesiredSpeedPercent)
+        {
+            _queuedMovement += directionAndDesiredSpeedPercent;
+        }
+
+        public void MoveInDirection(float desiredSpeedPercent, MoveDirection direction)
+        {
+            _queuedMovement += (GetVector3DirectionFromMoveDirection(direction) * desiredSpeedPercent);
+        }
+
         /// <summary>
         /// Moves in the directions specified by the Vector3, i.e. 1,0,0 is equal to MoveDirection.XAxisPositive at 100%, 
         /// -1,0,0 is equal to MoveDirection.XAxisNegative at 100%, 0,0.5f,0 is equal to MoveDirection.YAxisPositive at 50%
         /// </summary>
         /// <param name="directionAndDesiredSpeedPercent"></param>
-        public void MoveInDirection(Vector3 directionAndDesiredSpeedPercent)
+        protected void ApplyMovementInDirection(Vector3 directionAndDesiredSpeedPercent)
         {
             foreach (KeyValuePair<MoveDirectionDistinct, float> direction in GetScaledMoveDirectionFromVector3Direction(directionAndDesiredSpeedPercent))
             {
-                MoveInDirection(direction.Value, direction.Key);
+                ApplyMovementInDirection(direction.Value, direction.Key);
             }
         }
 
@@ -92,7 +102,7 @@ namespace Entities
         /// </summary>
         /// <param name="desiredSpeedPercent">Percentage of maximum speed desired, from 0.0f to 1.0f</param>
         /// <param name="direction">Direction(s) to move in</param>
-        public void MoveInDirection(float desiredSpeedPercent, MoveDirection direction)
+        protected void ApplyMovementInDirection(float desiredSpeedPercent, MoveDirection direction)
         {
             Vector3 forceModifier = Vector3.zero;
 
@@ -100,7 +110,7 @@ namespace Entities
             {
                 if ((direction & distinctDirection) > 0)
                 {
-                    MoveInDirection(desiredSpeedPercent, (MoveDirectionDistinct)distinctDirection);
+                    ApplyMovementInDirection(desiredSpeedPercent, (MoveDirectionDistinct)distinctDirection);
                 }
             }
         }
@@ -111,34 +121,16 @@ namespace Entities
         /// </summary>
         /// <param name="desiredSpeedPercent">Percentage of maximum speed desired, from 0.0f to 1.0f</param>
         /// <param name="distinctDirection">Direction(s) to move in</param>
-        public void MoveInDirection(float desiredSpeedPercent, MoveDirectionDistinct distinctDirection)
+        protected void ApplyMovementInDirection(float desiredSpeedPercent, MoveDirectionDistinct distinctDirection)
         {
             if (!Enum.IsDefined(typeof(MoveDirectionDistinct), distinctDirection))
             {
-                MoveInDirection(desiredSpeedPercent, (MoveDirection)distinctDirection);
+                ApplyMovementInDirection(desiredSpeedPercent, (MoveDirection)distinctDirection);
                 return;
             }
 
-            Vector3 forceForDirection = GetForceForDirection(desiredSpeedPercent, distinctDirection);
-
-            if (_queuedMovement.sqrMagnitude == 0)
-            {
-                _queuedMovement = forceForDirection;
-                return;
-            }
-
-            //Combine current queued force with newly calculated force, so that opposites are cancelled out
-            Vector3 combinedForce = forceForDirection + _queuedMovement;
-
-            //Actual movement should be the greater of current movement or new movement, but if combined force was lower than either of these (due to the 
-            //opposites being cancelled) it should be selected instead. Then since we're comparing absolutes, multiply by the sign of combinedForce to ensure
-            //negative numbers are still negative
-            _queuedMovement = new Vector3
-            (
-                Mathf.Min(Mathf.Max(Mathf.Abs(_queuedMovement.x), Mathf.Abs(forceForDirection.x)), Mathf.Abs(combinedForce.x)) * Mathf.Sign(combinedForce.x),
-                Mathf.Min(Mathf.Max(Mathf.Abs(_queuedMovement.y), Mathf.Abs(forceForDirection.y)), Mathf.Abs(combinedForce.y)) * Mathf.Sign(combinedForce.x),
-                Mathf.Min(Mathf.Max(Mathf.Abs(_queuedMovement.z), Mathf.Abs(forceForDirection.z)), Mathf.Abs(combinedForce.z)) * Mathf.Sign(combinedForce.x)
-            );
+            AddRelativeForce(GetForceForDirection(desiredSpeedPercent, distinctDirection));
+            return;
         }
 
         /// <summary>
@@ -233,8 +225,6 @@ namespace Entities
             {
                 speedModifier = (currentVelocity * activeProperties.ExponentialAccelerationRate);
             }
-
-            speedModifier *= Time.fixedDeltaTime;
 
             //Cap speed modifier so that we don't exceed maximum speed
             if (currentVelocity + speedModifier > activeProperties.MaximumSpeed)
@@ -365,7 +355,7 @@ namespace Entities
         {
             if (_queuedMovement.sqrMagnitude > 0)
             {
-                AddRelativeForce(_queuedMovement);
+                ApplyMovementInDirection(_queuedMovement);
             }
 
             _queuedMovement = Vector3.zero;
