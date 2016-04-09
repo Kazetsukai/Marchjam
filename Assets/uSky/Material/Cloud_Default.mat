@@ -59,8 +59,8 @@ Material:
       data:
         first:
           name: ShadeColorFromSun
-        second: {r: 0.9301109, g: 0.5209957, b: 0.1714411, a: 1}
+        second: {r: 0.7530535, g: 0.6385894, b: 0.47592983, a: 0.76811457}
       data:
         first:
           name: ShadeColorFromSky
-        second: {r: 0.29607025, g: 0.45077002, b: 0.7083544, a: 1}
+        second: {r: 0.33100468, g: 0.38609803, b: 0.45718628, a: 0.45318758}
