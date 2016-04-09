@@ -164,7 +164,7 @@ public class Vehicle : MonoBehaviour
             if (wheelsOnGround >= 3)
             {
                 //Apply jump force
-                rb.AddForce(0, JumpForce, 0, ForceMode.Force);
+                rb.AddForce(JumpForce * transform.up, ForceMode.Force);
                 jumpCooldownElapsed = 0;
             }
         }
