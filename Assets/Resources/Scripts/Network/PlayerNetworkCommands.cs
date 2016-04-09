@@ -7,7 +7,10 @@ using System.Linq;
 
 public class PlayerNetworkCommands : NetworkBehaviour {
 
-    public bool useMouseCam_SorryDaniel = false;
+    // Server only - amount of time to run server behind real time (to buffer client input)
+    float serverLatency = 0.1f;
+    Queue<Vehicle.State> _queuedStates = new Queue<Vehicle.State>();
+
     float localAdjust = 0;
     private Vehicle _playerVehicle;
     private Vehicle PlayerVehicle
@@ -33,25 +36,14 @@ public class PlayerNetworkCommands : NetworkBehaviour {
     // Only runs when this vehicle is our local player
     public override void OnStartLocalPlayer()
     {
-        if (useMouseCam_SorryDaniel)    //Forgive me Daniel. I needed to make it work in my scene.... :(
+        var camera = GameObject.FindObjectOfType<Camera_StraightLook>();
+        if (camera != null)
         {
-            var camera = GameObject.FindObjectOfType<Camera_StraightLook>();
-            if (camera != null)
-            {
-                camera.Target = PlayerVehicle.gameObject.transform;
-                camera.turret = PlayerVehicle.GetComponentInChildren<TurretController_Straight>();
-                camera.LockCursor();
-            }
-
+            camera.Target = PlayerVehicle.gameObject.transform;
+            camera.turret = PlayerVehicle.GetComponentInChildren<TurretController_Straight>();
+            camera.LockCursor();
         }
-        else
-        {
-            // Point camera at our vehicle
-            var camera = GameObject.FindObjectOfType<AutoCam>();
-            if (camera != null)
-                camera.SetTarget(PlayerVehicle.gameObject.transform);
-        }
-
+            
         StartCoroutine(SyncTime());
 
         base.OnStartLocalPlayer();
@@ -89,7 +81,7 @@ public class PlayerNetworkCommands : NetworkBehaviour {
             ReconcileErrors();
 
             // Send inputs to server
-            CmdSetVehicleInputs(input);
+            CmdSetVehicleState(state);
         }
 
     }
@@ -132,10 +124,10 @@ public class PlayerNetworkCommands : NetworkBehaviour {
     }
 
     [Command(channel = 1)]
-    private void CmdSetVehicleInputs(Vehicle.Inputs inputs)
+    private void CmdSetVehicleState(Vehicle.State state)
     {
-        _vehicleState = new Vehicle.State(PlayerVehicle.GetCurrentState()) { Inputs = inputs, ServerTime = Time.unscaledTime };
-        _playerVehicle.SetState(_vehicleState);
+        state.ServerTime += serverLatency;
+        _queuedStates.Enqueue(state);
     }
 
 
