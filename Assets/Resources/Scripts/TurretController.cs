@@ -6,59 +6,63 @@ using System.Linq;
 
 public class TurretController : MonoBehaviour
 {
-	public List<WeaponType> AvailableTypes = new List<WeaponType>();
-	public int CurrentWeaponIndex;
-	private WeaponType CurrentWeapon { get { return AvailableTypes.ElementAtOrDefault(CurrentWeaponIndex); } }
-	private bool SwitchingWeapon;
-	
-	public Rigidbody ParentVehicle;
-	public GameObject projectilePrefab;
-	public GameObject pulsePrefab;
-
-	[SerializeField]
-	float maxTurretRotation = 180f;
-	[SerializeField]
-	float maxBarrelLift = 45f;
-	[SerializeField]
-	float maxBarrelDrop = 15f;
 	private Transform _transform;
 	private Transform _car;
 	private Transform _barrel;
 	private Transform _bulletStartPoint;
+
+	[Header("Prefabs")]
+	public GameObject projectilePrefab;
+	public GameObject pulsePrefab;
+
+	[Header("Rotation/Elevation")]
+	private Vector3 cursorPosition;
 	[SerializeField]
-	float damping = 100f;
+	private float maxTurretRotation = 180f;
 	[SerializeField]
-	float cooldown = 0f;
-	public Vector3 cursorPosition;
+	private float maxBarrelLift = 45f;
+	[SerializeField]
+	private float maxBarrelDrop = 15f;
+	[SerializeField]
+	private float damping = 100f;
+
+	[Header("Weapons")]
+	[SerializeField]
+	public WeaponType[] AvailableTypes = new WeaponType[3];
+	private int CurrentWeaponIndex = 0;
+	[SerializeField]
+	public WeaponType CurrentWeapon { get { return AvailableTypes.ElementAtOrDefault(CurrentWeaponIndex); } }
+	[SerializeField]
+	private bool SwitchingWeapon;
+	[SerializeField]
+	private float cooldown = 0f;
 
 	// Use this for initialization
 	void Start()
 	{
-		AvailableTypes.Add(new WeaponType
+		AvailableTypes[0] = new WeaponType
 		{
 			ProjectilePrefab = projectilePrefab,
 			InitialBulletVelocity = 40f,
 			Style = WeaponStyle.Projectile,
 			Cooldown = 1f
-		});
+		};
 
-		AvailableTypes.Add(new WeaponType
+		AvailableTypes[1] = new WeaponType
 		{
 			ProjectilePrefab = projectilePrefab,
 			InitialBulletVelocity = 100f,
 			Style = WeaponStyle.ProjectileStraight,
 			Cooldown = 1f
-		});
+		};
 
-		AvailableTypes.Add(new WeaponType
+		AvailableTypes[2] = new WeaponType
 		{
 			ProjectilePrefab = pulsePrefab,
 			InitialBulletVelocity = 100f,
 			Style = WeaponStyle.Pulse,
 			Cooldown = 0.1f
-		});
-
-		CurrentWeaponIndex = 0;
+		};
 
 		_transform = GetComponent<Transform>();
 		_car = _transform.parent;
@@ -74,11 +78,19 @@ public class TurretController : MonoBehaviour
 
 	void FixedUpdate()
 	{
-		//weapons switch
 		WeaponSwitching();
 
 		var targetPos = GetTargetPosition();
 
+		Vector3 firingDirection = GetFiringDirection(targetPos);
+
+		RotateBarrelTo(firingDirection);
+
+		HandleFiring();
+	}
+
+	private Vector3 GetFiringDirection(Vector3 targetPos)
+	{
 		var lookDir = targetPos - _barrel.position;
 
 		Vector3 firingDirection;
@@ -95,9 +107,7 @@ public class TurretController : MonoBehaviour
 				break;
 		}
 
-		RotateBarrelTo(firingDirection);
-
-		HandleFiring();
+		return firingDirection;
 	}
 
 	private void WeaponSwitching()
@@ -106,7 +116,7 @@ public class TurretController : MonoBehaviour
 		{
 			if (!SwitchingWeapon)
 			{
-				CurrentWeaponIndex = (CurrentWeaponIndex + 1) % AvailableTypes.Count;
+				CurrentWeaponIndex = (CurrentWeaponIndex + 1) % AvailableTypes.Length;
 				SwitchingWeapon = true;
 			}
 		}
@@ -192,7 +202,7 @@ public class TurretController : MonoBehaviour
 			newBullet.SetLayerRecursively(LayerMask.NameToLayer("Bullets"));
 			newBullet.transform.position = _bulletStartPoint.position;
 			newBullet.transform.rotation = _bulletStartPoint.rotation;
-			newBullet.GetComponent<Rigidbody>().AddForce((_bulletStartPoint.forward * CurrentWeapon.InitialBulletVelocity) + ParentVehicle.velocity, ForceMode.VelocityChange);
+			newBullet.GetComponent<Rigidbody>().AddForce((_bulletStartPoint.forward * CurrentWeapon.InitialBulletVelocity) + _car.GetComponent<Rigidbody>().velocity, ForceMode.VelocityChange);
 			cooldown = CurrentWeapon.Cooldown;
 		}
 
@@ -214,7 +224,7 @@ public class TurretController : MonoBehaviour
 		if (CurrentWeapon.Style == WeaponStyle.Projectile || CurrentWeapon.Style == WeaponStyle.ProjectileStraight)
 		{
 			Vector3 position = _bulletStartPoint.position;
-			Vector3 velocity = _barrel.forward * CurrentWeapon.InitialBulletVelocity + ParentVehicle.velocity;
+			Vector3 velocity = _barrel.forward * CurrentWeapon.InitialBulletVelocity + _car.GetComponent<Rigidbody>().velocity;
 			for (int i = 0; i < numSteps; ++i)
 			{
 				var length = timeDelta * CurrentWeapon.InitialBulletVelocity;
