@@ -9,7 +9,7 @@ public class PlayerNetworkCommands : NetworkBehaviour {
 
     // Server only - amount of time to run server behind real time (to buffer client input)
     float serverLatency = 0.1f;
-    Queue<Vehicle.State> _queuedStates = new Queue<Vehicle.State>();
+    SortedList<float, Vehicle.State> _queuedStates = new SortedList<float, Vehicle.State>();
 
     float localAdjust = 0;
     private Vehicle _playerVehicle;
@@ -36,7 +36,7 @@ public class PlayerNetworkCommands : NetworkBehaviour {
     // Only runs when this vehicle is our local player
     public override void OnStartLocalPlayer()
     {
-        var camera = GameObject.FindObjectOfType<Camera_StraightLook>();
+        var camera = FindObjectOfType<Camera_StraightLook>();
         if (camera != null)
         {
             camera.Target = PlayerVehicle.gameObject.transform;
