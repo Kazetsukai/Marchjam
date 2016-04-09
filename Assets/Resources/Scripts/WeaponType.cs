@@ -11,6 +11,7 @@ public class WeaponType
 public enum WeaponStyle
 {
 	Projectile,
+	ProjectileStraight,
 	Pulse,
 	Hitscan
 }

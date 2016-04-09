@@ -10,7 +10,8 @@ public class TurretController : MonoBehaviour
 	public int CurrentWeaponIndex;
 	private WeaponType CurrentWeapon { get { return AvailableTypes.ElementAtOrDefault(CurrentWeaponIndex); } }
 	private bool SwitchingWeapon;
-
+	
+	public Rigidbody ParentVehicle;
 	public GameObject projectilePrefab;
 	public GameObject pulsePrefab;
 
@@ -26,8 +27,6 @@ public class TurretController : MonoBehaviour
 	private Transform _bulletStartPoint;
 	[SerializeField]
 	float damping = 100f;
-	[SerializeField]
-	float initialBulletVelocity = 40f;
 	[SerializeField]
 	float cooldown = 0f;
 	public Vector3 cursorPosition;
@@ -45,10 +44,18 @@ public class TurretController : MonoBehaviour
 
 		AvailableTypes.Add(new WeaponType
 		{
+			ProjectilePrefab = projectilePrefab,
+			InitialBulletVelocity = 100f,
+			Style = WeaponStyle.ProjectileStraight,
+			Cooldown = 1f
+		});
+
+		AvailableTypes.Add(new WeaponType
+		{
 			ProjectilePrefab = pulsePrefab,
 			InitialBulletVelocity = 100f,
-			Cooldown = 0.1f,
-			Style = WeaponStyle.Pulse
+			Style = WeaponStyle.Pulse,
+			Cooldown = 0.1f
 		});
 
 		CurrentWeaponIndex = 0;
@@ -78,8 +85,10 @@ public class TurretController : MonoBehaviour
 		switch (CurrentWeapon.Style)
 		{
 			case WeaponStyle.Projectile:
-				firingDirection = CalculateProjectileFiringSolution(lookDir, initialBulletVelocity);
+				// add parent vehicle velocity?
+				firingDirection = CalculateProjectileFiringSolution(lookDir, CurrentWeapon.InitialBulletVelocity);
 				break;
+			case WeaponStyle.ProjectileStraight:
 			case WeaponStyle.Pulse:
 			default:
 				firingDirection = lookDir;
@@ -183,7 +192,7 @@ public class TurretController : MonoBehaviour
 			newBullet.SetLayerRecursively(LayerMask.NameToLayer("Bullets"));
 			newBullet.transform.position = _bulletStartPoint.position;
 			newBullet.transform.rotation = _bulletStartPoint.rotation;
-			newBullet.GetComponent<Rigidbody>().AddForce(_bulletStartPoint.forward * CurrentWeapon.InitialBulletVelocity, ForceMode.VelocityChange);
+			newBullet.GetComponent<Rigidbody>().AddForce((_bulletStartPoint.forward * CurrentWeapon.InitialBulletVelocity) + ParentVehicle.velocity, ForceMode.VelocityChange);
 			cooldown = CurrentWeapon.Cooldown;
 		}
 
@@ -202,16 +211,17 @@ public class TurretController : MonoBehaviour
 		Vector3 gravity = new Vector3(0, -9.8f, 0);
 		Gizmos.color = Color.red;
 
-		if (CurrentWeapon.Style == WeaponStyle.Projectile)
+		if (CurrentWeapon.Style == WeaponStyle.Projectile || CurrentWeapon.Style == WeaponStyle.ProjectileStraight)
 		{
 			Vector3 position = _bulletStartPoint.position;
-			Vector3 velocity = _barrel.forward * initialBulletVelocity;
+			Vector3 velocity = _barrel.forward * CurrentWeapon.InitialBulletVelocity + ParentVehicle.velocity;
 			for (int i = 0; i < numSteps; ++i)
 			{
-				Gizmos.DrawLine(position, position + velocity.normalized * 2);
+				var length = timeDelta * CurrentWeapon.InitialBulletVelocity;
+				Gizmos.DrawLine(position, position + velocity.normalized * length);
 
 				RaycastHit hitInfo;
-				if (Physics.Raycast(position, velocity.normalized, out hitInfo, 2))
+				if (Physics.Raycast(position, velocity.normalized, out hitInfo, length))
 				{
 					cursorPosition = hitInfo.point;
 				}
