@@ -4,10 +4,15 @@ using UnityEngine.Networking;
 using UnityStandardAssets.Cameras;
 using System.Collections.Generic;
 using System.Linq;
+using System;
 
 public class PlayerNetworkCommands : NetworkBehaviour {
 
-    public bool useMouseCam_SorryDaniel = false;
+    // Server only - amount of time to run server behind real time (to buffer client input)
+    float serverLatency = 0.1f;
+
+    SortedList<float, Vehicle.State> _queuedStates = new SortedList<float, Vehicle.State>();
+
     float localAdjust = 0;
     private Vehicle _playerVehicle;
     private Vehicle PlayerVehicle
@@ -33,25 +38,14 @@ public class PlayerNetworkCommands : NetworkBehaviour {
     // Only runs when this vehicle is our local player
     public override void OnStartLocalPlayer()
     {
-        if (useMouseCam_SorryDaniel)    //Forgive me Daniel. I needed to make it work in my scene.... :(
+        var camera = FindObjectOfType<Camera_StraightLook>();
+        if (camera != null)
         {
-            var camera = GameObject.FindObjectOfType<Camera_StraightLook>();
-            if (camera != null)
-            {
-                camera.Target = PlayerVehicle.gameObject.transform;
-                camera.turret = PlayerVehicle.GetComponentInChildren<TurretController_Straight>();
-                camera.LockCursor();
-            }
-
+            camera.Target = PlayerVehicle.gameObject.transform;
+            camera.turret = PlayerVehicle.GetComponentInChildren<TurretController_Straight>();
+            camera.LockCursor();
         }
-        else
-        {
-            // Point camera at our vehicle
-            var camera = GameObject.FindObjectOfType<AutoCam>();
-            if (camera != null)
-                camera.SetTarget(PlayerVehicle.gameObject.transform);
-        }
-
+            
         StartCoroutine(SyncTime());
 
         base.OnStartLocalPlayer();
@@ -72,29 +66,70 @@ public class PlayerNetworkCommands : NetworkBehaviour {
 
         if (isServer)
         {
-            SetStateForClients(state);
+            bool newStateExists = false;
+            Vehicle.State newState = default(Vehicle.State);
+
+            // If we have new state for a player, send it out now.
+            while (_queuedStates.First().Key <= Time.unscaledTime)
+            {
+                newState = _queuedStates.First().Value;
+                newStateExists = true;
+                _queuedStates.RemoveAt(0);
+            }
+
+            if (newStateExists)
+            {
+                if (TooDifferent(newState, state))
+                {
+                    var inputs = newState.Inputs;
+                    newState = state;
+                    newState.Inputs = inputs;
+                }
+
+                // Locally update server simulation
+                PlayerVehicle.SetState(newState);
+
+                // Adjust for server being in the past, and inform clients
+                newState.ServerTime -= serverLatency;
+                SetStateForClients(newState);
+            }
         }
+
         if (isLocalPlayer)
         {
+            // Estimate current real time on the server
             state.ServerTime += localAdjust;
 
+            // Locally apply inputs for client prediction
             var input = PlayerVehicle.GetPlayerInputs();
             input.InputNumber = _nextInputNumber++;
 
-            // Locally apply inputs for client prediction
             state.Inputs = input;
             PlayerVehicle.SetState(state, false);
+
             _predictedStates.Enqueue(state);
 
-            ReconcileErrors();
+            ReconcileErrorsClientSide();
 
             // Send inputs to server
-            CmdSetVehicleInputs(input);
+            CmdSetVehicleState(state);
         }
-
     }
 
-    private void ReconcileErrors()
+    private bool TooDifferent(Vehicle.State newState, Vehicle.State state)
+    {
+        if ((newState.Position - state.Position).magnitude > 2)
+        {
+            return true;
+            Console.WriteLine("Too different!");
+        }
+
+        // TODO: Check more things
+        return false;
+    }
+
+    // Adjust the current location by a recency weighted average of the recent calculated errors
+    private void ReconcileErrorsClientSide()
     {
         // Adjust for error
         Vector3 posDiff = Vector3.zero;
@@ -131,14 +166,16 @@ public class PlayerNetworkCommands : NetworkBehaviour {
             _playerVehicle.rb.rotation = Quaternion.Slerp(_playerVehicle.rb.rotation, _playerVehicle.rb.rotation * rotDiff, 0.01f);
     }
 
+    // Sent state and inputs from client to server
     [Command(channel = 1)]
-    private void CmdSetVehicleInputs(Vehicle.Inputs inputs)
+    private void CmdSetVehicleState(Vehicle.State state)
     {
-        _vehicleState = new Vehicle.State(PlayerVehicle.GetCurrentState()) { Inputs = inputs, ServerTime = Time.unscaledTime };
-        _playerVehicle.SetState(_vehicleState);
+        // Adjust because the server is running in the past
+        state.ServerTime += serverLatency;
+        _queuedStates.Add(state.ServerTime, state);
     }
 
-
+    // Pass the vehicle state back to the client
     [Server]
     private void SetStateForClients(Vehicle.State state)
     {
@@ -196,10 +233,7 @@ public class PlayerNetworkCommands : NetworkBehaviour {
         }
         else
         {
-            _playerVehicle.rb.position = newState.Position;
-            _playerVehicle.rb.rotation = newState.Rotation;
-            _playerVehicle.rb.velocity = newState.Velocity;
-            _playerVehicle.rb.angularVelocity = newState.AngularVelocity;
+            PlayerVehicle.SetState(newState);
         }
     }
 
