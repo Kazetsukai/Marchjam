@@ -11,7 +11,9 @@ public class VehicleWheel : MonoBehaviour
     
     [SerializeField] float FrictionLateral_Drift = 0.1f;
     [SerializeField] AnimationCurve LatForceVsLatFricFactor;        //Defines how much the wheel starts to lose friction as more lateral force is applied
-   
+
+    public bool Handbraking = false;
+
     RaycastHit hit;
         
     void Start()
@@ -32,7 +34,7 @@ public class VehicleWheel : MonoBehaviour
                 Vector3 force_lateral = Vector3.Dot(ParentVehicle.rb.GetPointVelocity(transform.position), transform.up) * transform.up;
                 float latFrictionFactor = LatForceVsLatFricFactor.Evaluate(force_lateral.magnitude);
 
-                if (Input.GetAxis("Handbrake") > 0)
+                if (Handbraking)
                 {
                     latFrictionFactor = FrictionLateral_Drift;
                 }

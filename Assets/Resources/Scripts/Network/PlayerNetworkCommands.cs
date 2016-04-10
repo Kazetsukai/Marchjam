@@ -70,32 +70,41 @@ public class PlayerNetworkCommands : NetworkBehaviour {
 
         if (isServer)
         {
-            bool newStateExists = false;
-            Vehicle.State newState = default(Vehicle.State);
-
-            // If we have new state for a player, send it out now.
-            while (_queuedStates.First().Key <= Time.unscaledTime)
+            if (!isLocalPlayer)
             {
-                newState = _queuedStates.First().Value;
-                newStateExists = true;
-                _queuedStates.RemoveAt(0);
-            }
+                // Check info we have buffered from the client for this vehicle
+                bool newStateExists = false;
+                Vehicle.State newState = default(Vehicle.State);
 
-            if (newStateExists)
-            {
-                if (TooDifferent(newState, state))
+                // If we have new state for a player, send it out now.
+                while (_queuedStates.Any() && _queuedStates.First().Key <= Time.unscaledTime)
                 {
-                    var inputs = newState.Inputs;
-                    newState = state;
-                    newState.Inputs = inputs;
+                    newState = _queuedStates.First().Value;
+                    newStateExists = true;
+                    _queuedStates.RemoveAt(0);
                 }
 
-                // Locally update server simulation
-                PlayerVehicle.SetState(newState);
+                if (newStateExists)
+                {
+                    if (TooDifferent(newState, state))
+                    {
+                        var inputs = newState.Inputs;
+                        newState = state;
+                        newState.Inputs = inputs;
+                    }
 
-                // Adjust for server being in the past, and inform clients
-                newState.ServerTime -= serverLatency;
-                SetStateForClients(newState);
+                    // Locally update server simulation
+                    PlayerVehicle.SetState(newState);
+
+                    // Adjust for server being in the past, and inform clients
+                    newState.ServerTime -= serverLatency;
+                    SetStateForClients(newState);
+                }
+            }
+            else
+            {
+                // We are the server, just tell people where we are.
+                SetStateForClients(state);
             }
         }
 
@@ -104,19 +113,22 @@ public class PlayerNetworkCommands : NetworkBehaviour {
             // Estimate current real time on the server
             state.ServerTime += localAdjust;
 
-            // Locally apply inputs for client prediction
+            // Locally apply inputs for client prediction (or server authority)
             var input = PlayerVehicle.GetPlayerInputs();
             input.InputNumber = _nextInputNumber++;
 
             state.Inputs = input;
             PlayerVehicle.SetState(state, false);
 
-            _predictedStates.Enqueue(state);
+            if (!isServer)
+            {
+                _predictedStates.Enqueue(state);
 
-            ReconcileErrorsClientSide();
+                ReconcileErrorsClientSide();
 
-            // Send inputs to server
-            CmdSetVehicleState(state);
+                // Send inputs to server
+                CmdSetVehicleState(state);
+            }
         }
     }
 

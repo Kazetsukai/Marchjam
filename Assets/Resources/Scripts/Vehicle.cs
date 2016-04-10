@@ -102,6 +102,12 @@ public class Vehicle : MonoBehaviour
         //Update rigidbody centerofmass position
         rb.centerOfMass = transform.InverseTransformPoint(CenterOfMass.position);
 
+        var handbraking = _state.Inputs.Handbrake > 0;
+        Wheel_BL.Handbraking = handbraking;
+        Wheel_BR.Handbraking = handbraking;
+        Wheel_FL.Handbraking = handbraking;
+        Wheel_FR.Handbraking = handbraking;
+
         //Add drive force   
         if (rb.velocity.magnitude < MaxGroundSpeed)
         {
