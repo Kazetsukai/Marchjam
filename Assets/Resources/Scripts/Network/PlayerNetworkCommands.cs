@@ -48,6 +48,12 @@ public class PlayerNetworkCommands : NetworkBehaviour {
         base.OnStartLocalPlayer();
     }
 
+    internal bool IsLocal(GameObject obj)
+    {
+        var net = obj.transform.root.GetComponentInChildren<PlayerNetworkCommands>();
+        return net != null && net.isLocalPlayer;
+    }
+
     #region Weapon Firing
 
     [ClientRpc]
@@ -59,8 +65,6 @@ public class PlayerNetworkCommands : NetworkBehaviour {
     [Command]
     public void CmdFireWeapon(Vector3 position, Vector3 direction)
     {
-        // Only accept shots from the local car
-        if (isLocalPlayer)
             RpcFireWeapon(position, direction, Time.unscaledTime);
     }
 
@@ -175,19 +179,19 @@ public class PlayerNetworkCommands : NetworkBehaviour {
         foreach (var d in _posDiffs)
             posDiff = (posDiff + d) / 2;
 
-        _playerVehicle.rb.position -= posDiff / 100;
+        _playerVehicle.rb.position -= posDiff / 10;
 
         Vector3 velDiff = Vector3.zero;
         foreach (var d in _velDiffs)
             velDiff = (velDiff + d) / 2;
 
-        _playerVehicle.rb.velocity -= velDiff / 100;
+        _playerVehicle.rb.velocity -= velDiff / 10;
 
         Vector3 angVelDiff = Vector3.zero;
         foreach (var d in _angVelDiffs)
             angVelDiff = (angVelDiff + d) / 2;
 
-        _playerVehicle.rb.angularVelocity -= angVelDiff / 100;
+        _playerVehicle.rb.angularVelocity -= angVelDiff / 10;
 
         Quaternion rotDiff = Quaternion.identity;
         foreach (var d in _rotDiffs)
@@ -264,10 +268,10 @@ public class PlayerNetworkCommands : NetworkBehaviour {
                 _rotDiffs.Enqueue(diffRot);
                 _velDiffs.Enqueue(diffVel);
                 _angVelDiffs.Enqueue(diffAngVel);
-                while (_posDiffs.Count > 10) _posDiffs.Dequeue();
-                while (_rotDiffs.Count > 10) _rotDiffs.Dequeue();
-                while (_velDiffs.Count > 10) _velDiffs.Dequeue();
-                while (_angVelDiffs.Count > 10) _angVelDiffs.Dequeue();
+                while (_posDiffs.Count > 1) _posDiffs.Dequeue();
+                while (_rotDiffs.Count > 1) _rotDiffs.Dequeue();
+                while (_velDiffs.Count > 1) _velDiffs.Dequeue();
+                while (_angVelDiffs.Count > 1) _angVelDiffs.Dequeue();
             }
         }
         else

@@ -15,6 +15,7 @@ public class TurretController_Straight : MonoBehaviour, IWeaponController
 
     float cooldownElapsed;
     Collider bulletCollider;
+    private bool _isLocal;
 
     void Start()
     {
@@ -22,6 +23,8 @@ public class TurretController_Straight : MonoBehaviour, IWeaponController
 
         //Allow player to shoot immediately when game starts
         cooldownElapsed = FireCooldown;
+
+        _isLocal = PlayerNetworkCommands.LocalInstance.IsLocal(gameObject);
     }
     
     void Update()
@@ -42,7 +45,9 @@ public class TurretController_Straight : MonoBehaviour, IWeaponController
 
     void FireBullet()
     {
-        PlayerNetworkCommands.LocalInstance.CmdFireWeapon(BulletSpawnTransform.position, BulletSpawnTransform.rotation * Vector3.forward * BulletForce + ParentVehicle.velocity);
+        // If we don't check this, every player fires a bullet from every vehicle on the server.
+        if (_isLocal)
+            PlayerNetworkCommands.LocalInstance.CmdFireWeapon(BulletSpawnTransform.position, BulletSpawnTransform.rotation * Vector3.forward * BulletForce + ParentVehicle.velocity);
     }
 
     public void FireWeapon(Vector3 position, Vector3 direction, float serverTime)

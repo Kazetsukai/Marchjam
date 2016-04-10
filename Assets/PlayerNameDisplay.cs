@@ -14,7 +14,7 @@ public class PlayerNameDisplay : MonoBehaviour {
         _textRect = GetComponentInChildren<RectTransform>();
         _text = GetComponent<Text>();
 
-        _text.text = Environment.MachineName;
+        //_text.text = Environment.MachineName;
     }
 	
 	// Update is called once per frame
