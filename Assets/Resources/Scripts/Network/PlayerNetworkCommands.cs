@@ -8,26 +8,21 @@ using System;
 
 public class PlayerNetworkCommands : NetworkBehaviour {
 
+    public static PlayerNetworkCommands LocalInstance;
+
     // Server only - amount of time to run server behind real time (to buffer client input)
-    float serverLatency = 0.1f;
+    float _serverLatency = 0.1f;
 
-    SortedList<float, Vehicle.State> _queuedStates = new SortedList<float, Vehicle.State>();
+    // Estimated amount of time it takes for our messages to get to the server
+    float _localAdjust = 0;
 
-    float localAdjust = 0;
-    private Vehicle _playerVehicle;
-    private Vehicle PlayerVehicle
-    {
-        get
-        {
-            if (_playerVehicle == null)
-                _playerVehicle = GetComponentInChildren<Vehicle>();
-            return _playerVehicle;
-        }
-    }
+    IWeaponController _weaponController;
+
     
     // Runs on every client for every vehicle
     void Start()
     {
+        _weaponController = GetComponentInChildren<IWeaponController>();
     }
 
     void Update()
@@ -38,10 +33,8 @@ public class PlayerNetworkCommands : NetworkBehaviour {
     // Only runs when this vehicle is our local player
     public override void OnStartLocalPlayer()
     {
-        //Move player to spawn point
-        //PlayerVehicle.transform.position = FindObjectOfType<PlayerSpawnPoint>().transform.position;
-        //PlayerVehicle.transform.rotation = FindObjectOfType<PlayerSpawnPoint>().transform.rotation;
-        
+        LocalInstance = this;
+
         var camera = FindObjectOfType<Camera_StraightLook>();
         if (camera != null)
         {
@@ -55,6 +48,23 @@ public class PlayerNetworkCommands : NetworkBehaviour {
         base.OnStartLocalPlayer();
     }
 
+    #region Weapon Firing
+
+    [ClientRpc]
+    void RpcFireWeapon(Vector3 position, Vector3 direction, float serverTime)
+    {
+        _weaponController.FireWeapon(position, direction, serverTime);
+    }
+
+    [Command]
+    public void CmdFireWeapon(Vector3 position, Vector3 direction)
+    {
+        // Only accept shots from the local car
+        if (isLocalPlayer)
+            RpcFireWeapon(position, direction, Time.unscaledTime);
+    }
+
+#   endregion
 
     #region Vehicle Physics
     [SyncVar(hook = "UpdateStateFromServer")]
@@ -62,6 +72,19 @@ public class PlayerNetworkCommands : NetworkBehaviour {
 
     private Queue<Vehicle.State> _predictedStates = new Queue<Vehicle.State>();
     private int _nextInputNumber;
+
+    private SortedList<float, Vehicle.State> _queuedStates = new SortedList<float, Vehicle.State>();
+
+    private Vehicle _playerVehicle;
+    private Vehicle PlayerVehicle
+    {
+        get
+        {
+            if (_playerVehicle == null)
+                _playerVehicle = GetComponentInChildren<Vehicle>();
+            return _playerVehicle;
+        }
+    }
 
     private void UpdateVehicle()
     {
@@ -97,7 +120,7 @@ public class PlayerNetworkCommands : NetworkBehaviour {
                     PlayerVehicle.SetState(newState);
 
                     // Adjust for server being in the past, and inform clients
-                    newState.ServerTime -= serverLatency;
+                    newState.ServerTime -= _serverLatency;
                     SetStateForClients(newState);
                 }
             }
@@ -111,7 +134,7 @@ public class PlayerNetworkCommands : NetworkBehaviour {
         if (isLocalPlayer)
         {
             // Estimate current real time on the server
-            state.ServerTime += localAdjust;
+            state.ServerTime += _localAdjust;
 
             // Locally apply inputs for client prediction (or server authority)
             var input = PlayerVehicle.GetPlayerInputs();
@@ -187,7 +210,7 @@ public class PlayerNetworkCommands : NetworkBehaviour {
     private void CmdSetVehicleState(Vehicle.State state)
     {
         // Adjust because the server is running in the past
-        state.ServerTime += serverLatency;
+        state.ServerTime += _serverLatency;
         _queuedStates.Add(state.ServerTime, state);
     }
 
@@ -263,7 +286,7 @@ public class PlayerNetworkCommands : NetworkBehaviour {
         for (int i = 0; i < 5; i++)
         {
             Debug.Log("Bugging server");
-            CmdTellServerMyGuessedTime(Time.unscaledTime + localAdjust);
+            CmdTellServerMyGuessedTime(Time.unscaledTime + _localAdjust);
 
             yield return new WaitForSeconds(2);
         }
@@ -283,7 +306,7 @@ public class PlayerNetworkCommands : NetworkBehaviour {
     void RpcTellClientTheTime(float unscaledTime, float diff)
     {
         Debug.Log(unscaledTime + " - " + diff);
-        localAdjust += diff;
+        _localAdjust += diff;
     }
     #endregion
 

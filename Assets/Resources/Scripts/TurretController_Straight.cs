@@ -1,7 +1,8 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System;
 
-public class TurretController_Straight : MonoBehaviour
+public class TurretController_Straight : MonoBehaviour, IWeaponController
 {
     [Header("Object")]
     public Rigidbody ParentVehicle;
@@ -41,11 +42,16 @@ public class TurretController_Straight : MonoBehaviour
 
     void FireBullet()
     {
+        PlayerNetworkCommands.LocalInstance.CmdFireWeapon(BulletSpawnTransform.position, BulletSpawnTransform.rotation * Vector3.forward * BulletForce + ParentVehicle.velocity);
+    }
+
+    public void FireWeapon(Vector3 position, Vector3 direction, float serverTime)
+    {
         //Generate new bullet
-        GameObject newBullet = (GameObject)GameObject.Instantiate(BulletPrefab, BulletSpawnTransform.position, BulletSpawnTransform.rotation);
+        GameObject newBullet = (GameObject)GameObject.Instantiate(BulletPrefab, position, Quaternion.FromToRotation(Vector3.forward, direction.normalized));
 
         //Add initial force to bullet
-        newBullet.GetComponent<Rigidbody>().AddForce(newBullet.transform.forward * BulletForce + ParentVehicle.velocity, ForceMode.Force);
+        newBullet.GetComponent<Rigidbody>().AddForce(direction, ForceMode.Force);
 
         //Set bullet to ignore all colliders of parent vehicle 
         foreach (Collider parentCol in ParentVehicle.GetComponentsInChildren<Collider>())
