@@ -29,6 +29,7 @@ GameObject:
   - 4: {fileID: 416378}
   - 114: {fileID: 11448404}
   - 114: {fileID: 11490562}
+  - 114: {fileID: 11493320}
   m_Layer: 0
   m_Name: NetworkController
   m_TagString: Untagged
@@ -270,6 +271,17 @@ MonoBehaviour:
   showGUI: 1
   offsetX: 0
   offsetY: 0
+--- !u!114 &11493320
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 142976}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3ba7e550b5df88e42a800d3ee494af1f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!124 &12455792
 Behaviour:
   m_ObjectHideFlags: 1
