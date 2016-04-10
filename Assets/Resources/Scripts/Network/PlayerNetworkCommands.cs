@@ -38,6 +38,10 @@ public class PlayerNetworkCommands : NetworkBehaviour {
     // Only runs when this vehicle is our local player
     public override void OnStartLocalPlayer()
     {
+        //Move player to spawn point
+        PlayerVehicle.transform.position = FindObjectOfType<PlayerSpawnPoint>().transform.position;
+        PlayerVehicle.transform.rotation = FindObjectOfType<PlayerSpawnPoint>().transform.rotation;
+        
         var camera = FindObjectOfType<Camera_StraightLook>();
         if (camera != null)
         {
